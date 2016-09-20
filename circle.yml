@@ -1,0 +1,6 @@
+machine:
+  timezone: Asia/Tokyo
+
+test:
+  override:
+    - echo Hello Circle CI

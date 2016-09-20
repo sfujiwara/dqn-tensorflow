@@ -1,0 +1,2 @@
+numpy
+https://storage.googleapis.com/tensorflow/mac/cpu/tensorflow-0.10.0-py2-none-any.whl
