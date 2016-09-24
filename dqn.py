@@ -65,11 +65,11 @@ class DQN:
         return train_ops
 
     def update(self, sess, x_t, x_t_plus_1, r_t, terminal):
-        y_t = r_t + np.max(sess.run(self.q, feed_dict={self.x_ph: x_t_plus_1}), axis=1) * (1-terminal) * self.gamma
-        fd = {
-            self.x_ph: x_t,
-            self.y_ph: y_t,
-        }
+        # Compute target score
+        fd = {self.x_ph: x_t_plus_1}
+        y_t = r_t + np.max(sess.run(self.q, feed_dict=fd), axis=1) * (1-terminal) * self.gamma
+        # Run optimization operation
+        fd = {self.x_ph: x_t, self.y_ph: y_t}
         _, train_loss = sess.run([self.train_ops, self.loss], feed_dict=fd)
         return train_loss
 
