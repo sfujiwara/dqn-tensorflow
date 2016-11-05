@@ -5,14 +5,14 @@ import numpy as np
 
 class ChasingSimulator:
 
-    def __init__(self, field_size=84):
+    def __init__(self, field_size):
         self.field_size = field_size
         self.iter = 0
         self.player_position = None
         self.enemy_position = None
-        self.init_field()
+        self.init_game()
 
-    def init_field(self):
+    def init_game(self):
         self.iter = 0
         # Decide player position at random
         self.player_position = np.array([
@@ -29,31 +29,36 @@ class ChasingSimulator:
     def input_key(self, action):
         state_prev = self.draw_field()
         # Update player position
-        if action == "right":
-            self.player_position[1] = min(self.field_size - 1, self.player_position[1] + 1)
-        elif action == "left":
-            self.player_position[1] = max(0, self.player_position[1]-1)
-        elif action == "up":
-            self.player_position[0] = max(0, self.player_position[0]-1)
-        elif action == "down":
-            self.player_position[0] = min(self.field_size - 1, self.player_position[0] + 1)
-        elif action == "do_nothing":
+        # Do nothing
+        if action == 0:
             pass
+        # Right
+        elif action == 1:
+            self.player_position[1] = min(self.field_size - 1, self.player_position[1] + 1)
+        # Left
+        elif action == 2:
+            self.player_position[1] = max(0, self.player_position[1]-1)
+        # Up
+        elif action == 3:
+            self.player_position[0] = max(0, self.player_position[0]-1)
+        # Down
+        elif action == 4:
+            self.player_position[0] = min(self.field_size - 1, self.player_position[0] + 1)
         else:
             raise ValueError
         # TODO: update enemy position
-        # Compute reward
-        # print self.player_position, self.enemy_position, action
-        if np.all(np.abs(self.player_position-self.enemy_position) <= 1):
+        # Game clear
+        if np.all(self.player_position == self.enemy_position):
             terminal = True
             reward = 1
-        elif self.iter >= 50:
+        # Time over
+        elif self.iter >= 2 * self.field_size:
             terminal = True
             reward = -1
+        # Give reward for distance
         else:
             terminal = False
-            norm = np.linalg.norm(self.player_position - self.enemy_position)
-            reward = -norm/10000.
+            reward = -np.sum(np.abs(self.player_position-self.enemy_position)) / (2.*self.field_size)
         result = {
             "reward": reward,
             "state_prev": state_prev,
@@ -63,7 +68,7 @@ class ChasingSimulator:
         }
         self.iter += 1
         if terminal:
-            self.init_field()
+            self.init_game()
         return result
 
     def draw_field(self):
