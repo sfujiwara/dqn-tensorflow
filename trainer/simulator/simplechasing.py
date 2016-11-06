@@ -11,8 +11,10 @@ class SimpleChasingSimulator:
         self.player_position = None
         self.enemy_position = None
         self.init_game()
+        self.terminal = False
 
     def init_game(self):
+        self.terminal = False
         self.iter = 0
         # Decide player position at random
         self.player_position = 2
@@ -32,26 +34,26 @@ class SimpleChasingSimulator:
             self.player_position = min(self.field_size-1, self.player_position+1)
         # Game clear
         if self.player_position == self.enemy_position:
-            terminal = True
-            reward = 1
+            self.terminal = True
+            reward = 1.
         # Time over
         elif self.iter >= 2 * self.field_size:
-            terminal = True
-            reward = -1
+            self.terminal = True
+            reward = -0.1
         # Give reward for distance
         else:
-            terminal = False
+            self.terminal = False
             reward = -0.
         result = {
             "reward": reward,
             "state_prev": state_prev,
             "state": self.draw_field(),
-            "terminal": terminal,
+            "terminal": self.terminal,
             "action": action
         }
         self.iter += 1
-        if terminal:
-            self.init_game()
+        # if self.terminal:
+        #     self.init_game()
         return result
 
     def draw_field(self):
