@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
 # Default modules
+import json
 import logging
 
 # Additional modules
 import numpy as np
 import tensorflow as tf
+
 
 # Create logger
 logger = logging.getLogger(__name__)
@@ -19,7 +21,7 @@ class DQN:
         self.learning_rate = learning_rate
         self.n_actions = n_actions
         self.gamma = 0.95
-        self.x_ph = tf.placeholder(tf.float32, shape=[None, input_size], name="x_placeholder")
+        self.x_ph = tf.placeholder(tf.float32, shape=[None, input_size, input_size, 2], name="x_placeholder")
         self.y_ph = tf.placeholder(tf.float32, shape=[None], name="y_placeholder")
         self.a_ph = tf.placeholder(tf.int64, shape=[None], name="a_placeholder")
         self.q = self._inference(self.x_ph, self.n_actions)
@@ -29,8 +31,10 @@ class DQN:
 
     @staticmethod
     def _inference(x_ph, n_actions):
-        logits = tf.contrib.layers.fully_connected(x_ph, n_actions, activation_fn=None)
-        outputs = tf.nn.softmax(logits)
+        h_conv1 = tf.contrib.layers.convolution2d(inputs=x_ph, num_outputs=16, kernel_size=8, stride=4)
+        h_conv2 = tf.contrib.layers.convolution2d(inputs=h_conv1, num_outputs=32, kernel_size=4, stride=2)
+        h_conv2_flat = tf.contrib.layers.flatten(h_conv2)
+        outputs = tf.contrib.layers.fully_connected(h_conv2_flat, n_actions, activation_fn=None)
         return outputs
 
     @staticmethod
@@ -63,5 +67,21 @@ class DQN:
         return sess.run(self.merged)
 
     # TODO: model saver
-    def save_model(self):
-        return 0
+    def save_model(self, session, dir):
+        input_size = self.x_ph.get_shape()[1].value
+        # Create a new graph for prediction
+        with tf.Graph().as_default():
+            x = tf.placeholder(tf.float32, shape=[None, input_size, input_size, 2], name="x_placeholder")
+            q = self._inference(x, self.n_actions)
+            # Define key element
+            input_key = tf.placeholder(tf.int64, [None, ], name="key")
+            output_key = tf.identity(input_key)
+            # Define API inputs/outpus object
+            inputs = {"key": input_key.name, "state": x.name}
+            outputs = {"key": output_key.name, "q": q.name}
+            tf.add_to_collection("inputs", json.dumps(inputs))
+            tf.add_to_collection("outputs", json.dumps(outputs))
+            # Save model
+            saver = tf.train.Saver()
+            tf.train.Saver().export_meta_graph(filename="{}/model/export.meta".format(dir))
+            saver.save(session, "{}/model/export".format(dir), write_meta_graph=False)
