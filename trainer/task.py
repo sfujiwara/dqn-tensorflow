@@ -11,9 +11,9 @@ import tensorflow as tf
 from trainer import dqn, repmem
 from trainer import chasing
 
-N_INPUTS = 5
+N_INPUTS = 3
 N_EPOCH = 50000
-LEARNING_RATE = 1e-4
+LEARNING_RATE = 1e-3
 N_ACTIONS = 5
 
 # Set log level
@@ -23,6 +23,7 @@ tf.logging.set_verbosity(tf.logging.DEBUG)
 parser = argparse.ArgumentParser()
 parser.add_argument("--output_path", type=str)
 parser.add_argument("--n_epoch", type=int)
+parser.add_argument("--learning_rate", type=float)
 args, unknown_args = parser.parse_known_args()
 tf.logging.info("known args: {}".format(args))
 
@@ -105,8 +106,8 @@ else:
                 terminal = res["terminal"]
                 r_t = res["r_t"]
                 a_t = res["a_t"]
-                if i == 0 or r_t > 0.5:
-                    replay_memory.store(s_t, a_t, r_t, s_t_plus_1, terminal)
+                # Store the experience
+                replay_memory.store(s_t, a_t, r_t, s_t_plus_1, terminal)
                 # Update the policy
                 mini_batch = replay_memory.sample(size=32)
                 train_loss = dqn_agent.update(
