@@ -12,10 +12,9 @@ from trainer import dqn, repmem
 from trainer import chasing
 
 N_INPUTS = 5
-N_EPOCH = 5000
+N_EPOCH = 50000
 LEARNING_RATE = 1e-4
 N_ACTIONS = 5
-N_KERNEL = 2
 
 # Set log level
 tf.logging.set_verbosity(tf.logging.DEBUG)
@@ -23,6 +22,7 @@ tf.logging.set_verbosity(tf.logging.DEBUG)
 # Parse arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--output_path", type=str)
+parser.add_argument("--n_epoch", type=int)
 args, unknown_args = parser.parse_known_args()
 tf.logging.info("known args: {}".format(args))
 
@@ -96,17 +96,17 @@ else:
                     action = np.random.randint(N_ACTIONS)
                 # Act following the policy on the other games
                 else:
-                    action = np.argmax(dqn_agent.act(sess, np.array([x_t])))
+                    action = np.argmax(dqn_agent.act(sess, np.array([s_t])))
                 # Act on the game simulator
                 res = game_simulator.input_key(action)
                 # Receive the results from the game simulator
-                x_t = res["state_prev"]
-                x_t_plus_1 = res["state"]
+                s_t = res["s_t"]
+                s_t_plus_1 = res["s_t_plus_1"]
                 terminal = res["terminal"]
-                r_t = res["reward"]
-                a_t = res["action"]
+                r_t = res["r_t"]
+                a_t = res["a_t"]
                 if i == 0 or r_t > 0.5:
-                    replay_memory.store(x_t, a_t, r_t, x_t_plus_1, terminal)
+                    replay_memory.store(s_t, a_t, r_t, s_t_plus_1, terminal)
                 # Update the policy
                 mini_batch = replay_memory.sample(size=32)
                 train_loss = dqn_agent.update(

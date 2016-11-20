@@ -21,7 +21,7 @@ class DQN:
         self.learning_rate = learning_rate
         self.n_actions = n_actions
         self.gamma = 0.95
-        self.x_ph = tf.placeholder(tf.float32, shape=[None, input_size, input_size, 2], name="x_placeholder")
+        self.x_ph = tf.placeholder(tf.float32, shape=[None, input_size, input_size, 3], name="x_placeholder")
         self.y_ph = tf.placeholder(tf.float32, shape=[None], name="y_placeholder")
         self.a_ph = tf.placeholder(tf.int64, shape=[None], name="a_placeholder")
         self.q = self._inference(self.x_ph, self.n_actions)

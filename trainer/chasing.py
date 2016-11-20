@@ -50,33 +50,42 @@ class ChasingSimulator:
         # Game clear
         if np.all(self.player_position == self.enemy_position):
             self.terminal = True
-            reward = 1
+            reward = 1.
         # Time over
         elif self.iter >= 2 * self.field_size:
             self.terminal = True
-            reward = -1
+            reward = self.compute_reward()
         # Give reward for distance
         else:
             self.terminal = False
-            reward = -np.sum(np.abs(self.player_position-self.enemy_position)) / (2.*self.field_size)
+            reward = self.compute_reward()
         result = {
-            "reward": reward,
-            "state_prev": state_prev,
-            "state": self.state(),
+            "r_t": reward,
+            "s_t": state_prev,
+            "s_t_plus_1": self.state(),
             "terminal": self.terminal,
-            "action": action
+            "a_t": action
         }
         self.iter += 1
         return result
 
-    def draw_field(self):
+    def compute_reward(self):
+        dist = np.linalg.norm(self.player_position - self.enemy_position)
+        max_dist = np.linalg.norm([self.field_size, self.field_size])
+        reward = - dist / max_dist
+        return reward
+
+    def show_field(self):
         field = np.array([['-']*self.field_size]*self.field_size)
         field[self.player_position[0], self.player_position[1]] = 'P'
         field[self.enemy_position[0], self.enemy_position[1]] = 'E'
         return field
 
     def state(self):
-        x = np.zeros([self.field_size, self.field_size, 2], dtype=np.int32)
-        x[self.player_position[0], self.player_position[1], 0] = 1
-        x[self.enemy_position[0], self.enemy_position[1], 1] = 1
-        return x
+        s = np.zeros([self.field_size, self.field_size, 3], dtype=np.float32)
+        # Set player position on first kernel
+        s[self.player_position[0], self.player_position[1], 0] = 1
+        # Set enemy position on second kernel
+        s[self.enemy_position[0], self.enemy_position[1], 1] = 1
+        # TODO: Set structures on third kernel
+        return s
