@@ -13,7 +13,7 @@ from trainer import chasing
 
 N_INPUTS = 3
 N_EPOCH = 50000
-LEARNING_RATE = 1e-3
+LEARNING_RATE = 1e-4
 N_ACTIONS = 5
 
 # Set log level

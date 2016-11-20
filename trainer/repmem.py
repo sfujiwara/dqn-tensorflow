@@ -19,7 +19,7 @@ class ReplayMemory:
         self.df = self.df.append(row, ignore_index=True)
         # Restrict memory usage
         if self.df.size > self.memory_size:
-            self.df = self.df.sample(self.memory_size)
+            self.df = self.df.sample(self.memory_size, replace=True)
 
     def sample(self, size):
         df_mini_batch = self.df.iloc[np.random.choice(self.df.index, size)]
