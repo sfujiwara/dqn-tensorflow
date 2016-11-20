@@ -28,6 +28,8 @@ gcloud beta ml jobs submit training ${JOB_NAME} \
 
 ## Prediction on Cloud Machine Learning
 
+### using `gcloud beta ml predict`
+
 ```
 gcloud beta ml predict --model=dqn --instances=predict_sample.json
 ```
@@ -41,4 +43,15 @@ predictions:
   - 0.757209
   - 0.75318
   - 0.737671
+```
+
+### using `curl`
+
+```
+ACCESS_TOKEN=`gcloud auth print-access-token`
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${ACCESS_TOKEN}" https://ml.googleapis.com/v1beta1/projects/cpb100demo1/models/dqn:predict -d @predict_sample_curl.json
+```
+
+```json
+{"predictions": [{"q": [0.4523559808731079, 0.38499385118484497, 0.26314204931259155, 0.6228029131889343, 0.5784728527069092], "key": 0}]} 
 ```
