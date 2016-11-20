@@ -22,7 +22,7 @@ class ReplayMemory:
             self.df = self.df.sample(self.memory_size, replace=True)
 
     def sample(self, size):
-        df_mini_batch = self.df.iloc[np.random.choice(self.df.index, size)]
+        df_mini_batch = self.df.sample(size, replace=True)
         result = {
             "s_t": np.array(list(df_mini_batch["s_t"])),
             "a_t": np.array(list(df_mini_batch["a_t"])),
