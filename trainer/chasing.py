@@ -52,7 +52,7 @@ class ChasingSimulator:
             self.terminal = True
             reward = 1.
         # Time over
-        elif self.iter >= 2 * self.field_size:
+        elif self.iter >= 5 * self.field_size:
             self.terminal = True
             reward = self.compute_reward()
         # Give reward for distance

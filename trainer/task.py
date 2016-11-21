@@ -26,7 +26,7 @@ tf.logging.info("known args: {}".format(args))
 # Set constant values
 MAX_EPOCHS = args.max_epochs
 N_INPUTS = 3
-N_RANDOM_ACTION = 5000
+N_RANDOM_ACTION = 500
 LEARNING_RATE = args.learning_rate
 N_ACTIONS = 5
 
@@ -68,8 +68,11 @@ else:
             # Create DQN agent
             dqn_agent = dqn.DQN(input_size=N_INPUTS, learning_rate=LEARNING_RATE, n_actions=N_ACTIONS)
             global_step = tf.Variable(0, trainable=False, name="global_step")
-            win_count = tf.Variable(0, trainable=False, name="win_count")
+            win_count = tf.Variable(1e-5, trainable=False, name="win_count")
+            game_count = tf.Variable(1e-5, trainable=False, name="game_count")
+            win_rate = tf.div(win_count, game_count)
             increment_win_count_op = win_count.assign_add(1)
+            increment_game_count_op = game_count.assign_add(1)
             init_op = tf.initialize_all_variables()
             # Create saver
             saver = tf.train.Saver(max_to_keep=10)
@@ -95,6 +98,7 @@ else:
         sess.run(init_op)
         win_count = 0
         for i in range(MAX_EPOCHS):
+            sess.run(increment_game_count_op)
             # Play a new game
             while not game_simulator.terminal:
                 # Act at random on the first few games
@@ -127,11 +131,10 @@ else:
                     mini_batch["terminal"]
                 )
             tf.logging.info("epoch: {0} win_rate: {1} reward: {2} loss: {3}".format(
-                i, win_count/(i+1e-5), r_t, np.mean(train_loss))
+                i, sess.run(win_count), r_t, np.mean(train_loss))
             )
             if r_t > 0.5:
                 sess.run(increment_win_count_op)
-                win_count += 1
             game_simulator.init_game()
         # Save model
         dqn_agent.save_model(sess, args.output_path)

@@ -2,17 +2,10 @@
 
 # Default modules
 import json
-import logging
 
 # Additional modules
 import numpy as np
 import tensorflow as tf
-
-
-# Create logger
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(logging.StreamHandler())
 
 
 class DQN:
