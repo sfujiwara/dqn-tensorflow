@@ -3,7 +3,9 @@
 ## Training on Local
 
 ```sh
-python -m trainer.task --output_path=log
+python -m trainer.task --output_path=log \
+                       --max_epochs=500 \
+                       --learning_rate=0.001
 ```
 
 ## Training on Cloud Machine Learning
@@ -13,7 +15,6 @@ JOB_NAME="dqn`date '+%Y%m%d%H%M%S'`"
 PROJECT_ID=`gcloud config list project --format "value(core.project)"`
 TRAIN_BUCKET=gs://${PROJECT_ID}-ml
 TRAIN_PATH=${TRAIN_BUCKET}/dqn/${JOB_NAME}
-gsutil rm -rf ${TRAIN_PATH}
 gsutil cp .dummy ${TRAIN_PATH}/model/
 
 gcloud beta ml jobs submit training ${JOB_NAME} \
@@ -24,6 +25,8 @@ gcloud beta ml jobs submit training ${JOB_NAME} \
   --config=config.yaml \
   -- \
   --output_path="${TRAIN_PATH}"
+  --max_epochs=50000
+  --learning_rate=0.001
 ```
 
 ## Prediction on Cloud Machine Learning

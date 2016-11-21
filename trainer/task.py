@@ -11,10 +11,6 @@ import tensorflow as tf
 from trainer import dqn, repmem
 from trainer import chasing
 
-N_INPUTS = 3
-N_EPOCH = 50000
-LEARNING_RATE = 1e-4
-N_ACTIONS = 5
 
 # Set log level
 tf.logging.set_verbosity(tf.logging.DEBUG)
@@ -22,16 +18,26 @@ tf.logging.set_verbosity(tf.logging.DEBUG)
 # Parse arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--output_path", type=str)
-parser.add_argument("--n_epoch", type=int)
+parser.add_argument("--max_epochs", type=int)
 parser.add_argument("--learning_rate", type=float)
 args, unknown_args = parser.parse_known_args()
 tf.logging.info("known args: {}".format(args))
+
+# Set constant values
+MAX_EPOCHS = args.max_epochs
+N_INPUTS = 3
+N_RANDOM_ACTION = 5000
+LEARNING_RATE = args.learning_rate
+N_ACTIONS = 5
 
 # Get environment variable for Cloud ML
 tf_conf = json.loads(os.environ.get("TF_CONFIG", "{}"))
 # For local
 if not tf_conf:
-    tf_conf = json.load(open("local.json"))
+    tf_conf = {
+      "cluster": {"master": ["localhost:2222"]},
+      "task": {"index": 0, "type": "master"}
+    }
 tf.logging.debug("TF_CONF: {}".format(json.dumps(tf_conf)))
 
 # Cluster setting for cloud
@@ -62,6 +68,8 @@ else:
             # Create DQN agent
             dqn_agent = dqn.DQN(input_size=N_INPUTS, learning_rate=LEARNING_RATE, n_actions=N_ACTIONS)
             global_step = tf.Variable(0, trainable=False, name="global_step")
+            win_count = tf.Variable(0, trainable=False, name="win_count")
+            increment_win_count_op = win_count.assign_add(1)
             init_op = tf.initialize_all_variables()
             # Create saver
             saver = tf.train.Saver(max_to_keep=10)
@@ -86,11 +94,11 @@ else:
         # Initializer
         sess.run(init_op)
         win_count = 0
-        for i in range(N_EPOCH):
+        for i in range(MAX_EPOCHS):
             # Play a new game
             while not game_simulator.terminal:
                 # Act at random on the first few games
-                if i < 100:
+                if i < N_RANDOM_ACTION:
                     action = np.random.randint(N_ACTIONS)
                 # Act at random with a fixed probability
                 elif np.random.uniform() >= 0.9:
@@ -122,6 +130,7 @@ else:
                 i, win_count/(i+1e-5), r_t, np.mean(train_loss))
             )
             if r_t > 0.5:
+                sess.run(increment_win_count_op)
                 win_count += 1
             game_simulator.init_game()
         # Save model
