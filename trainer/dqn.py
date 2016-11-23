@@ -63,8 +63,8 @@ class DQN:
     def save_model(self, session, dir):
         input_size = self.x_ph.get_shape()[1].value
         # Create a new graph for prediction
-        with tf.Graph().as_default():
-            x = tf.placeholder(tf.float32, shape=[None, input_size, input_size, 2], name="x_placeholder")
+        with tf.Graph().as_default() as g:
+            x = tf.placeholder(tf.float32, shape=[None, input_size, input_size, 3], name="x_placeholder")
             q = self._inference(x, self.n_actions)
             # Define key element
             input_key = tf.placeholder(tf.int64, [None, ], name="key")
@@ -72,9 +72,10 @@ class DQN:
             # Define API inputs/outpus object
             inputs = {"key": input_key.name, "state": x.name}
             outputs = {"key": output_key.name, "q": q.name}
-            tf.add_to_collection("inputs", json.dumps(inputs))
-            tf.add_to_collection("outputs", json.dumps(outputs))
+            g.add_to_collection("inputs", json.dumps(inputs))
+            g.add_to_collection("outputs", json.dumps(outputs))
             # Save model
             saver = tf.train.Saver()
-            tf.train.Saver().export_meta_graph(filename="{}/model/export.meta".format(dir))
+            saver.export_meta_graph(filename="{}/model/export.meta".format(dir))
+            # saver.save(session, "{}/model/export".format(dir), write_meta_graph=False)
             saver.save(session, "{}/model/export".format(dir), write_meta_graph=False)
