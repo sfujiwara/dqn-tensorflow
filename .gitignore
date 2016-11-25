@@ -3,4 +3,4 @@
 log
 *.pyc
 submit_job.sh
-sandbox.py
+sandbox*
