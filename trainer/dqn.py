@@ -14,6 +14,7 @@ class DQN:
         self.learning_rate = learning_rate
         self.n_actions = n_actions
         self.gamma = 0.95
+        # Build graph
         self.x_ph = tf.placeholder(tf.float32, shape=[None, input_size, input_size, 3], name="x_placeholder")
         self.y_ph = tf.placeholder(tf.float32, shape=[None], name="y_placeholder")
         self.a_ph = tf.placeholder(tf.int64, shape=[None], name="a_placeholder")
@@ -21,6 +22,7 @@ class DQN:
         self.loss = self._build_loss(self.y_ph, self.q, self.a_ph)
         self.train_ops = self._build_optimizer(self.loss, learning_rate)
         self.merged = tf.merge_all_summaries()
+        self.saver = tf.train.Saver()
 
     @staticmethod
     def _inference(x_ph, n_actions):
@@ -75,7 +77,5 @@ class DQN:
             g.add_to_collection("inputs", json.dumps(inputs))
             g.add_to_collection("outputs", json.dumps(outputs))
             # Save model
-            saver = tf.train.Saver()
-            saver.export_meta_graph(filename="{}/model/export.meta".format(dir))
-            # saver.save(session, "{}/model/export".format(dir), write_meta_graph=False)
-            saver.save(session, "{}/model/export".format(dir), write_meta_graph=False)
+            tf.train.Saver().export_meta_graph(filename="{}/model/export.meta".format(dir))
+            self.saver.save(session, "{}/model/export".format(dir), write_meta_graph=False)
