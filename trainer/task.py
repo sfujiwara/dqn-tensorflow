@@ -39,7 +39,7 @@ if not tf_conf:
       "cluster": {"master": ["localhost:2222"]},
       "task": {"index": 0, "type": "master"}
     }
-tf.logging.debug("TF_CONF: {}".format(json.dumps(tf_conf)))
+tf.logging.debug("TF_CONF: {}".format(json.dumps(tf_conf, indent=2)))
 
 # Cluster setting for cloud
 cluster = tf_conf.get("cluster", None)

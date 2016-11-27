@@ -32,12 +32,12 @@ class ChasingSimulator:
         # Do nothing
         if action == 0:
             pass
-        # Right
-        elif action == 1:
-            self.player_position[1] = min(self.field_size - 1, self.player_position[1] + 1)
         # Left
+        elif action == 1:
+            self.player_position[1] = max(0, self.player_position[1] - 1)
+        # Right
         elif action == 2:
-            self.player_position[1] = max(0, self.player_position[1]-1)
+            self.player_position[1] = min(self.field_size - 1, self.player_position[1] + 1)
         # Up
         elif action == 3:
             self.player_position[0] = max(0, self.player_position[0]-1)
