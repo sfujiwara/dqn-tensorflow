@@ -42,8 +42,8 @@ class DQN:
 
     @staticmethod
     def _build_optimizer(loss, learning_rate):
-        train_ops = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(loss)
-        return train_ops
+        train_op = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(loss)
+        return train_op
 
     def update(self, sess, x_t, a_t, r_t, x_t_plus_1, terminal):
         # Compute target score
@@ -61,7 +61,6 @@ class DQN:
     def write_summary(self, sess):
         return sess.run(self.merged)
 
-    # TODO: model saver
     def save_model(self, session, dir):
         input_size = self.x_ph.get_shape()[1].value
         # Create a new graph for prediction

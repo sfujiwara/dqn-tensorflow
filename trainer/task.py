@@ -20,13 +20,14 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--output_path", type=str)
 parser.add_argument("--max_epochs", type=int)
 parser.add_argument("--learning_rate", type=float)
+parser.add_argument("--n_inputs", type=int, default=84)
 args, unknown_args = parser.parse_known_args()
 tf.logging.info("known args: {}".format(args))
 
 # Set constant values
 MAX_EPOCHS = args.max_epochs
-N_INPUTS = 84
-N_RANDOM_ACTION = 500
+N_INPUTS = args.n_inputs
+N_RANDOM_ACTION = int(MAX_EPOCHS / 20) + 1
 LEARNING_RATE = args.learning_rate
 N_ACTIONS = 5
 
@@ -97,7 +98,7 @@ else:
                 if i < N_RANDOM_ACTION:
                     action = np.random.randint(N_ACTIONS)
                 # Act at random with a fixed probability
-                elif np.random.uniform() >= 0.9:
+                elif np.random.uniform() >= 0.:
                     action = np.random.randint(N_ACTIONS)
                 # Act following the policy on the other games
                 else:
