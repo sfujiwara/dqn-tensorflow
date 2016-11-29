@@ -98,7 +98,7 @@ else:
                 if i < N_RANDOM_ACTION:
                     action = np.random.randint(N_ACTIONS)
                 # Act at random with a fixed probability
-                elif np.random.uniform() >= 0.:
+                elif np.random.uniform() >= 0.9:
                     action = np.random.randint(N_ACTIONS)
                 # Act following the policy on the other games
                 else:
@@ -114,7 +114,7 @@ else:
                 # Store the experience
                 replay_memory.store(s_t, a_t, r_t, s_t_plus_1, terminal)
                 # Update the policy
-                mini_batch = replay_memory.sample(size=32)
+                mini_batch = replay_memory.sample(size=320)
                 train_loss = dqn_agent.update(
                     sess,
                     mini_batch["s_t"],

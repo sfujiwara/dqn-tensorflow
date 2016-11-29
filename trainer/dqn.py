@@ -13,7 +13,7 @@ class DQN:
     def __init__(self, input_size=84, learning_rate=1e-4, n_actions=5):
         self.learning_rate = learning_rate
         self.n_actions = n_actions
-        self.gamma = 0.95
+        self.gamma = 0.8
         # Build graph
         self.x_ph = tf.placeholder(tf.float32, shape=[None, input_size, input_size, 3], name="x_placeholder")
         self.y_ph = tf.placeholder(tf.float32, shape=[None], name="y_placeholder")
@@ -25,7 +25,12 @@ class DQN:
         self.saver = tf.train.Saver()
 
     @staticmethod
-    def _inference(x_ph, n_actions):
+    def _inference(x_ph, n_actions, simple=True):
+        if simple:
+            x_flat = tf.contrib.layers.flatten(x_ph)
+            hidden1 = tf.contrib.layers.fully_connected(x_flat, 32, activation_fn=tf.nn.relu)
+            outputs = tf.contrib.layers.fully_connected(hidden1, n_actions, activation_fn=None)
+            return outputs
         h_conv1 = tf.contrib.layers.convolution2d(inputs=x_ph, num_outputs=16, kernel_size=8, stride=4)
         h_conv2 = tf.contrib.layers.convolution2d(inputs=h_conv1, num_outputs=32, kernel_size=4, stride=2)
         h_conv2_flat = tf.contrib.layers.flatten(h_conv2)
@@ -42,7 +47,7 @@ class DQN:
 
     @staticmethod
     def _build_optimizer(loss, learning_rate):
-        train_op = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(loss)
+        train_op = tf.train.AdagradOptimizer(learning_rate=learning_rate).minimize(loss)
         return train_op
 
     def update(self, sess, x_t, a_t, r_t, x_t_plus_1, terminal):

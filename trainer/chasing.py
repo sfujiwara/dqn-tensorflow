@@ -72,7 +72,7 @@ class ChasingSimulator:
     def compute_reward(self):
         dist = np.linalg.norm(self.player_position - self.enemy_position)
         max_dist = np.linalg.norm([self.field_size, self.field_size])
-        reward = - dist / max_dist
+        reward = - dist / max_dist * 10
         return reward
 
     def show_field(self):

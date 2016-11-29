@@ -2,5 +2,6 @@
 .idea
 log
 *.pyc
-submit_job.sh
+run_cloud.sh
+run_local.sh
 sandbox*
