@@ -114,15 +114,16 @@ else:
                 # Store the experience
                 replay_memory.store(s_t, a_t, r_t, s_t_plus_1, terminal)
                 # Update the policy
-                mini_batch = replay_memory.sample(size=320)
-                train_loss = dqn_agent.update(
-                    sess,
-                    mini_batch["s_t"],
-                    mini_batch["a_t"],
-                    mini_batch["r_t"],
-                    mini_batch["s_t_plus_1"],
-                    mini_batch["terminal"]
-                )
+                for _ in range(20):
+                    mini_batch = replay_memory.sample(size=32)
+                    train_loss = dqn_agent.update(
+                        sess,
+                        mini_batch["s_t"],
+                        mini_batch["a_t"],
+                        mini_batch["r_t"],
+                        mini_batch["s_t_plus_1"],
+                        mini_batch["terminal"]
+                    )
             tf.logging.info("epoch: {0} win_rate: {1} reward: {2} loss: {3}".format(
                 i, win_count/(i+1e-5), r_t, np.mean(train_loss))
             )
