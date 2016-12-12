@@ -7,6 +7,8 @@ import json
 import numpy as np
 import tensorflow as tf
 
+FIELD_SIZE = 4
+
 with tf.Graph().as_default() as graph:
     saver = tf.train.import_meta_graph("log/model/export.meta")
     inputs = json.loads(tf.get_collection("inputs")[0])
@@ -15,4 +17,4 @@ with tf.Graph().as_default() as graph:
     q = graph.get_tensor_by_name(outputs["q"])
     with tf.Session() as sess:
         saver.restore(sess, "log/model/export")
-        print sess.run(q, feed_dict={state: np.zeros([1, 84, 84, 3])})
+        print sess.run(q, feed_dict={state: np.zeros([1, FIELD_SIZE, FIELD_SIZE, 3])})

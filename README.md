@@ -35,7 +35,7 @@ gcloud beta ml jobs submit training ${JOB_NAME} \
 ### using `gcloud beta ml predict`
 
 ```
-gcloud beta ml predict --model=dqn --instances=predict_sample.json
+gcloud beta ml predict --model=dqn --json-instances=predict_sample.json
 ```
 
 ```yaml
