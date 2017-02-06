@@ -28,8 +28,9 @@ class DQN:
     def _inference(x_ph, n_actions, simple=True):
         if simple:
             x_flat = tf.contrib.layers.flatten(x_ph)
-            hidden1 = tf.contrib.layers.fully_connected(x_flat, 32, activation_fn=tf.nn.relu)
-            outputs = tf.contrib.layers.fully_connected(hidden1, n_actions, activation_fn=None)
+            with tf.device('/gpu:0'):
+                hidden1 = tf.contrib.layers.fully_connected(x_flat, 32, activation_fn=tf.nn.relu)
+                outputs = tf.contrib.layers.fully_connected(hidden1, n_actions, activation_fn=None)
             return outputs
         h_conv1 = tf.contrib.layers.convolution2d(inputs=x_ph, num_outputs=16, kernel_size=8, stride=4)
         h_conv2 = tf.contrib.layers.convolution2d(inputs=h_conv1, num_outputs=32, kernel_size=4, stride=2)

@@ -25,8 +25,11 @@ with tf.Graph().as_default() as graph:
     saver.restore(sess, os.path.join(MODEL_DIR, "export"))
 
 
-@app.route('/', methods=["GET"])
+@app.route('/', methods=["POST"])
 def main():
+    d = flask.request.json
+    print type(d)
+    print d
     mat = sess.run(q, feed_dict={state: np.zeros([1, FIELD_SIZE, FIELD_SIZE, 3])}).tolist()
     result = {"predictions": [{"q": i, "key": None} for i in mat]}
     return flask.jsonify(result)
