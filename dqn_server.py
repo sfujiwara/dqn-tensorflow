@@ -28,7 +28,6 @@ with tf.Graph().as_default() as graph:
 @app.route('/', methods=["GET", "POST"])
 def main():
     content = flask.request.get_json(force=True)
-    print content['instances'][0]
     result = sess.run(q, feed_dict={state: [content["instances"][0]["state"]]}).tolist()
     return flask.jsonify({"predictions": [{"q": result[0], "key": None}]})
 
