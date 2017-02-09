@@ -19,6 +19,9 @@ data = {
 with open('predict_sample.json', 'w') as f:
     json.dump(data, f)
 
+with open('predict_sample_curl.json', 'w') as f:
+    json.dump({"instances": [data]}, f)
+
 print field[:, :, 0]
 print field[:, :, 1]
 

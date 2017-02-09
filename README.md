@@ -59,3 +59,13 @@ curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${ACC
 ```json
 {"predictions": [{"q": [0.4523559808731079, 0.38499385118484497, 0.26314204931259155, 0.6228029131889343, 0.5784728527069092], "key": 0}]} 
 ```
+
+## DQN Server
+
+```
+python dqn_server.py
+```
+
+```
+curl -X POST -H "Content-Type: application/json" localhost:5000 -d @predict_sample_curl.json
+```
