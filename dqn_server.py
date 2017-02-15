@@ -6,7 +6,6 @@ import os
 
 # Additional modules
 import flask
-import numpy as np
 import tensorflow as tf
 
 app = flask.Flask(__name__)
