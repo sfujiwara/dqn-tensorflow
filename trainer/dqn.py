@@ -13,14 +13,15 @@ class DQN:
     def __init__(self, input_size=84, learning_rate=1e-4, n_actions=5):
         self.learning_rate = learning_rate
         self.n_actions = n_actions
-        self.gamma = 0.8
+        self.gamma = 0.9
         # Build graph
-        self.x_ph = tf.placeholder(tf.float32, shape=[None, input_size, input_size, 3], name="x_placeholder")
-        self.y_ph = tf.placeholder(tf.float32, shape=[None], name="y_placeholder")
-        self.a_ph = tf.placeholder(tf.int64, shape=[None], name="a_placeholder")
-        self.q = self._inference(self.x_ph, self.n_actions)
-        self.loss = self._build_loss(self.y_ph, self.q, self.a_ph)
-        self.train_ops = self._build_optimizer(self.loss, learning_rate)
+        with tf.device("/gpu:0"):
+            self.x_ph = tf.placeholder(tf.float32, shape=[None, input_size, input_size, 3], name="x_placeholder")
+            self.y_ph = tf.placeholder(tf.float32, shape=[None], name="y_placeholder")
+            self.a_ph = tf.placeholder(tf.int64, shape=[None], name="a_placeholder")
+            self.q = self._inference(self.x_ph, self.n_actions)
+            self.loss = self._build_loss(self.y_ph, self.q, self.a_ph)
+            self.train_ops = self._build_optimizer(self.loss, learning_rate)
         self.merged = tf.merge_all_summaries()
         self.saver = tf.train.Saver()
 
@@ -28,14 +29,14 @@ class DQN:
     def _inference(x_ph, n_actions, simple=True):
         if simple:
             x_flat = tf.contrib.layers.flatten(x_ph)
-            with tf.device('/gpu:0'):
-                hidden1 = tf.contrib.layers.fully_connected(x_flat, 32, activation_fn=tf.nn.relu)
-                outputs = tf.contrib.layers.fully_connected(hidden1, n_actions, activation_fn=None)
+            hidden1 = tf.contrib.layers.fully_connected(x_flat, 32, activation_fn=tf.nn.relu)
+            outputs = tf.contrib.layers.fully_connected(hidden1, n_actions, activation_fn=None)
             return outputs
-        h_conv1 = tf.contrib.layers.convolution2d(inputs=x_ph, num_outputs=16, kernel_size=8, stride=4)
-        h_conv2 = tf.contrib.layers.convolution2d(inputs=h_conv1, num_outputs=32, kernel_size=4, stride=2)
-        h_conv2_flat = tf.contrib.layers.flatten(h_conv2)
-        outputs = tf.contrib.layers.fully_connected(h_conv2_flat, n_actions, activation_fn=None)
+        else:
+            h_conv1 = tf.contrib.layers.convolution2d(inputs=x_ph, num_outputs=16, kernel_size=8, stride=4)
+            h_conv2 = tf.contrib.layers.convolution2d(inputs=h_conv1, num_outputs=32, kernel_size=4, stride=2)
+            h_conv2_flat = tf.contrib.layers.flatten(h_conv2)
+            outputs = tf.contrib.layers.fully_connected(h_conv2_flat, n_actions, activation_fn=None)
         return outputs
 
     @staticmethod

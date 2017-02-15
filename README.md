@@ -30,6 +30,12 @@ gcloud beta ml jobs submit training ${JOB_NAME} \
   --learning_rate=0.001
 ```
 
+## Monitoring with TensorBoard
+
+```sh
+tensorboard --logdir=gs://${PROJECT_ID}-ml/dqn/${JOB_NAME}
+```
+
 ## Prediction on Cloud Machine Learning
 
 ### using `gcloud beta ml predict`
