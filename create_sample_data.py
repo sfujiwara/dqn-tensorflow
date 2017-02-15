@@ -16,16 +16,16 @@ data = {
     "state": field.tolist()
 }
 
-with open('predict_sample.json', 'w') as f:
+with open("sampledata/sample.json", "w") as f:
     json.dump(data, f)
 
-with open('predict_sample_curl.json', 'w') as f:
+with open("sampledata/sample_curl.json", "w") as f:
     json.dump({"instances": [data]}, f)
 
 print field[:, :, 0]
 print field[:, :, 1]
 
 subprocess.call(
-    "gcloud beta ml predict --model=dqn --json-instances=predict_sample.json",
+    "gcloud beta ml predict --model=dqn --json-instances=sampledata/sample.json",
     shell=True
 )

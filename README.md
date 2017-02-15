@@ -35,7 +35,7 @@ gcloud beta ml jobs submit training ${JOB_NAME} \
 ### using `gcloud beta ml predict`
 
 ```
-gcloud beta ml predict --model=dqn --json-instances=predict_sample.json
+gcloud beta ml predict --model=dqn --json-instances=sampledata/predict_sample.json
 ```
 
 ```yaml
@@ -53,7 +53,7 @@ predictions:
 
 ```
 ACCESS_TOKEN=`gcloud auth print-access-token`
-curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${ACCESS_TOKEN}" https://ml.googleapis.com/v1beta1/projects/cpb100demo1/models/dqn:predict -d @predict_sample_curl.json
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${ACCESS_TOKEN}" https://ml.googleapis.com/v1beta1/projects/cpb100demo1/models/dqn:predict -d @sampledata/sample_curl.json
 ```
 
 ```json
@@ -67,5 +67,5 @@ python dqn_server.py
 ```
 
 ```
-curl -X POST -H "Content-Type: application/json" localhost:5000 -d @predict_sample_curl.json
+curl -X POST -H "Content-Type: application/json" localhost:5000 -d @sampledata/sample_curl.json
 ```
