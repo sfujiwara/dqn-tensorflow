@@ -15,14 +15,13 @@ class DQN:
         self.n_actions = n_actions
         self.gamma = 0.9
         # Build graph
-        with tf.device("/gpu:0"):
-            self.x_ph = tf.placeholder(tf.float32, shape=[None, input_size, input_size, 3], name="x_placeholder")
-            self.y_ph = tf.placeholder(tf.float32, shape=[None], name="y_placeholder")
-            self.a_ph = tf.placeholder(tf.int64, shape=[None], name="a_placeholder")
-            self.q = self._inference(self.x_ph, self.n_actions)
-            self.loss = self._build_loss(self.y_ph, self.q, self.a_ph)
-            self.train_ops = self._build_optimizer(self.loss, learning_rate)
-        self.merged = tf.merge_all_summaries()
+        self.x_ph = tf.placeholder(tf.float32, shape=[None, input_size, input_size, 3], name="x_placeholder")
+        self.y_ph = tf.placeholder(tf.float32, shape=[None], name="y_placeholder")
+        self.a_ph = tf.placeholder(tf.int64, shape=[None], name="a_placeholder")
+        self.q = self._inference(self.x_ph, self.n_actions)
+        self.loss = self._build_loss(self.y_ph, self.q, self.a_ph)
+        self.train_ops = self._build_optimizer(self.loss, learning_rate)
+        self.merged = tf.summary.merge_all()
         self.saver = tf.train.Saver()
 
     @staticmethod

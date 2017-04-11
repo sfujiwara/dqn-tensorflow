@@ -87,7 +87,7 @@ else:
 
     with sv.managed_session(server.target) as sess:
         # Create summary writer
-        summary_writer = tf.train.SummaryWriter(args.output_path, graph=sess.graph)
+        summary_writer = tf.summary.FileWriter(args.output_path, graph=sess.graph)
         # Initializer
         sess.run(init_op)
         win_count = 0.
