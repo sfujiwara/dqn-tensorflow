@@ -53,85 +53,85 @@ server = tf.train.Server(
 # Parameter server
 if tf_conf["task"]["type"] == "ps":
     server.join()
+
 # Master and workers
-else:
-    device_fn = tf.train.replica_device_setter(
-        cluster=tf.train.ClusterSpec(cluster=cluster),
-        worker_device="/job:{0}/task:{1}".format(tf_conf["task"]["type"], tf_conf["task"]["index"]),
-    )
+device_fn = tf.train.replica_device_setter(
+    cluster=tf.train.ClusterSpec(cluster=cluster),
+    worker_device="/job:{0}/task:{1}".format(tf_conf["task"]["type"], tf_conf["task"]["index"]),
+)
 
-    # Logging
-    tf.logging.debug("/job:{0}/task:{1} build graph".format(tf_conf["task"]["type"], tf_conf["task"]["index"]))
+# Logging
+tf.logging.debug("/job:{0}/task:{1} build graph".format(tf_conf["task"]["type"], tf_conf["task"]["index"]))
 
-    # Build graph
-    with tf.Graph().as_default() as graph:
-        with tf.device(device_fn):
-            # Create DQN agent
-            dqn_agent = dqn.DQN(input_size=N_INPUTS, learning_rate=LEARNING_RATE, n_actions=N_ACTIONS)
-            global_step = tf.Variable(0, trainable=False, name="global_step")
-            init_op = tf.initialize_all_variables()
+# Build graph
+with tf.Graph().as_default() as graph:
+    with tf.device(device_fn):
+        # Create DQN agent
+        dqn_agent = dqn.DQN(input_size=N_INPUTS, learning_rate=LEARNING_RATE, n_actions=N_ACTIONS)
+        global_step = tf.Variable(0, trainable=False, name="global_step")
+        init_op = tf.initialize_all_variables()
 
-    # Create game simulator
-    game_simulator = chasing.ChasingSimulator(field_size=N_INPUTS)
-    # Create replay memory
-    replay_memory = repmem.ReplayMemory()
+# Create game simulator
+game_simulator = chasing.ChasingSimulator(field_size=N_INPUTS)
+# Create replay memory
+replay_memory = repmem.ReplayMemory()
 
-    sv = tf.train.Supervisor(
-        graph=graph,
-        is_chief=(tf_conf["task"]["type"] == "master"),
-        logdir=args.output_path,
-        init_op=init_op,
-        global_step=global_step,
-        summary_op=None
-    )
+sv = tf.train.Supervisor(
+    graph=graph,
+    is_chief=(tf_conf["task"]["type"] == "master"),
+    logdir=args.output_path,
+    init_op=init_op,
+    global_step=global_step,
+    summary_op=None
+)
 
-    with sv.managed_session(server.target) as sess:
-        # Create summary writer
-        summary_writer = tf.summary.FileWriter(args.output_path, graph=sess.graph)
-        # Initializer
-        sess.run(init_op)
-        win_count = 0.
-        for i in range(MAX_EPOCHS):
-            # Play a new game
-            while not game_simulator.terminal:
-                # Act at random on the first few games
-                if i < N_RANDOM_ACTION:
-                    action = np.random.randint(N_ACTIONS)
-                # Act at random with a fixed probability
-                elif np.random.uniform() >= 0.9:
-                    action = np.random.randint(N_ACTIONS)
-                # Act following the policy on the other games
-                else:
-                    action = np.argmax(dqn_agent.act(sess, np.array([s_t])))
-                # Act on the game simulator
-                res = game_simulator.step(action)
-                # Receive the results from the game simulator
-                s_t = res["s_t"]
-                s_t_plus_1 = res["s_t_plus_1"]
-                terminal = res["terminal"]
-                r_t = res["r_t"]
-                a_t = res["a_t"]
-                # Store the experience
-                replay_memory.store(s_t, a_t, r_t, s_t_plus_1, terminal)
-                # Update the policy
-                for _ in range(20):
-                    mini_batch = replay_memory.sample(size=32)
-                    train_loss = dqn_agent.update(
-                        sess,
-                        mini_batch["s_t"],
-                        mini_batch["a_t"],
-                        mini_batch["r_t"],
-                        mini_batch["s_t_plus_1"],
-                        mini_batch["terminal"]
-                    )
-            tf.logging.info("epoch: {0} win_rate: {1} reward: {2} loss: {3}".format(
-                i, win_count/(i+1e-5), r_t, np.mean(train_loss))
-            )
-            if r_t > 0.5:
-                win_count += 1
-            game_simulator.reset()
-        # Only master save model
-        if tf_conf["task"]["type"] == "master":
-            tf.logging.debug("save model to {}".format(args.output_path))
-            dqn_agent.save_model(sess, args.output_path)
-        sv.stop()
+with sv.managed_session(server.target) as sess:
+    # Create summary writer
+    summary_writer = tf.summary.FileWriter(args.output_path, graph=sess.graph)
+    # Initializer
+    sess.run(init_op)
+    win_count = 0.
+    for i in range(MAX_EPOCHS):
+        # Play a new game
+        while not game_simulator.terminal:
+            # Act at random on the first few games
+            if i < N_RANDOM_ACTION:
+                action = np.random.randint(N_ACTIONS)
+            # Act at random with a fixed probability
+            elif np.random.uniform() >= 0.9:
+                action = np.random.randint(N_ACTIONS)
+            # Act following the policy on the other games
+            else:
+                action = np.argmax(dqn_agent.act(sess, np.array([s_t])))
+            # Act on the game simulator
+            res = game_simulator.step(action)
+            # Receive the results from the game simulator
+            s_t = res["s_t"]
+            s_t_plus_1 = res["s_t_plus_1"]
+            terminal = res["terminal"]
+            r_t = res["r_t"]
+            a_t = res["a_t"]
+            # Store the experience
+            replay_memory.store(s_t, a_t, r_t, s_t_plus_1, terminal)
+            # Update the policy
+            for _ in range(20):
+                mini_batch = replay_memory.sample(size=32)
+                train_loss = dqn_agent.update(
+                    sess,
+                    mini_batch["s_t"],
+                    mini_batch["a_t"],
+                    mini_batch["r_t"],
+                    mini_batch["s_t_plus_1"],
+                    mini_batch["terminal"]
+                )
+        tf.logging.info("epoch: {0} win_rate: {1} reward: {2} loss: {3}".format(
+            i, win_count/(i+1e-5), r_t, np.mean(train_loss))
+        )
+        if r_t > 0.5:
+            win_count += 1
+        game_simulator.reset()
+    # Only master save model
+    if tf_conf["task"]["type"] == "master":
+        tf.logging.debug("save model to {}".format(args.output_path))
+        dqn_agent.save_model(sess, args.output_path)
+    sv.stop()
