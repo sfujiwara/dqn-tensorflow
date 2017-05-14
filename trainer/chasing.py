@@ -28,7 +28,6 @@ class ChasingSimulator:
         return self.state()
 
     def step(self, action):
-        state_prev = self.state()
         # Update player position
         # Do nothing
         if action == 0:
@@ -71,9 +70,9 @@ class ChasingSimulator:
         return reward
 
     def render(self):
-        field = np.array([['-']*self.field_size]*self.field_size)
-        field[self.player_position[0], self.player_position[1]] = 'P'
-        field[self.enemy_position[0], self.enemy_position[1]] = 'E'
+        field = np.array([["-"]*self.field_size]*self.field_size)
+        field[self.player_position[0], self.player_position[1]] = "P"
+        field[self.enemy_position[0], self.enemy_position[1]] = "E"
         print(field)
 
     def state(self):
