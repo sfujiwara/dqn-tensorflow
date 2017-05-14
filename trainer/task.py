@@ -104,7 +104,7 @@ else:
                 else:
                     action = np.argmax(dqn_agent.act(sess, np.array([s_t])))
                 # Act on the game simulator
-                res = game_simulator.input_key(action)
+                res = game_simulator.step(action)
                 # Receive the results from the game simulator
                 s_t = res["s_t"]
                 s_t_plus_1 = res["s_t_plus_1"]
@@ -129,7 +129,7 @@ else:
             )
             if r_t > 0.5:
                 win_count += 1
-            game_simulator.init_game()
+            game_simulator.reset()
         # Only master save model
         if tf_conf["task"]["type"] == "master":
             tf.logging.debug("save model to {}".format(args.output_path))

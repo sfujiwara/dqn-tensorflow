@@ -11,9 +11,9 @@ class ChasingSimulator:
         self.terminal = False
         self.player_position = None
         self.enemy_position = None
-        self.init_game()
+        self.reset()
 
-    def init_game(self):
+    def reset(self):
         """
         Initialize player position, enemy position, structure, and iteration.
         :return: None
@@ -26,7 +26,7 @@ class ChasingSimulator:
         self.enemy_position = np.random.randint(low=0, high=self.field_size, size=2)
         # TODO: Generate walls at random here
 
-    def input_key(self, action):
+    def step(self, action):
         state_prev = self.state()
         # Update player position
         # Do nothing
@@ -75,7 +75,7 @@ class ChasingSimulator:
         reward = - dist / max_dist * 10
         return reward
 
-    def show_field(self):
+    def render(self):
         field = np.array([['-']*self.field_size]*self.field_size)
         field[self.player_position[0], self.player_position[1]] = 'P'
         field[self.enemy_position[0], self.enemy_position[1]] = 'E'
