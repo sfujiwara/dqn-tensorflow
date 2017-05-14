@@ -11,9 +11,9 @@ class ChasingSimulator:
         self.terminal = False
         self.player_position = None
         self.enemy_position = None
-        self.init_game()
+        self.reset()
 
-    def init_game(self):
+    def reset(self):
         """
         Initialize player position, enemy position, structure, and iteration.
         :return: None
@@ -25,8 +25,9 @@ class ChasingSimulator:
         # Decide enemy position at random
         self.enemy_position = np.random.randint(low=0, high=self.field_size, size=2)
         # TODO: Generate walls at random here
+        return self.state()
 
-    def input_key(self, action):
+    def step(self, action):
         state_prev = self.state()
         # Update player position
         # Do nothing
@@ -59,15 +60,9 @@ class ChasingSimulator:
         else:
             self.terminal = False
             reward = self.compute_reward()
-        result = {
-            "r_t": reward,
-            "s_t": state_prev,
-            "s_t_plus_1": self.state(),
-            "terminal": self.terminal,
-            "a_t": action
-        }
         self.iter += 1
-        return result
+        info = None
+        return self.state(), reward, self.terminal, info
 
     def compute_reward(self):
         dist = np.linalg.norm(self.player_position - self.enemy_position)
@@ -75,11 +70,11 @@ class ChasingSimulator:
         reward = - dist / max_dist * 10
         return reward
 
-    def show_field(self):
+    def render(self):
         field = np.array([['-']*self.field_size]*self.field_size)
         field[self.player_position[0], self.player_position[1]] = 'P'
         field[self.enemy_position[0], self.enemy_position[1]] = 'E'
-        return field
+        print(field)
 
     def state(self):
         s = np.zeros([self.field_size, self.field_size, 3], dtype=np.float32)
@@ -89,3 +84,13 @@ class ChasingSimulator:
         s[self.enemy_position[0], self.enemy_position[1], 1] = 1
         # TODO: Set structures on third kernel
         return s
+
+if __name__ == "__main__":
+    env = ChasingSimulator(field_size=4)
+    n_action = 4
+    # Use env same as OpenAI Gym: https://gym.openai.com
+    observation = env.reset()
+    for _ in range(1000):
+        env.render()
+        action = np.random.randint(n_action)
+        observation, reward, done, info = env.step(action)
