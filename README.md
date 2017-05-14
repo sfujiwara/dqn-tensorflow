@@ -9,6 +9,16 @@ python -m trainer.task --output_path=log \
                        --n_inputs=2
 ```
 
+## Training on Local with gcloud
+
+```
+gcloud ml-engine local train --module-name trainer.task \
+          --package-path trainer \
+          --distributed \
+          --parameter-server-count 1 \
+          --worker-count 1
+```
+
 ## Training on Cloud Machine Learning
 
 ```sh
