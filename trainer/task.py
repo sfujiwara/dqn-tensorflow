@@ -72,7 +72,7 @@ with tf.Graph().as_default() as graph:
         init_op = tf.initialize_all_variables()
 
 # Create game simulator
-game_simulator = chasing.ChasingSimulator(field_size=N_INPUTS)
+env = chasing.ChasingSimulator(field_size=N_INPUTS)
 # Create replay memory
 replay_memory = repmem.ReplayMemory()
 
@@ -93,7 +93,9 @@ with sv.managed_session(server.target) as sess:
     win_count = 0.
     for i in range(MAX_EPOCHS):
         # Play a new game
-        while not game_simulator.terminal:
+        previous_observation = env.reset()
+        done = False
+        while not done:
             # Act at random on the first few games
             if i < N_RANDOM_ACTION:
                 action = np.random.randint(N_ACTIONS)
@@ -102,20 +104,15 @@ with sv.managed_session(server.target) as sess:
                 action = np.random.randint(N_ACTIONS)
             # Act following the policy on the other games
             else:
-                action = np.argmax(dqn_agent.act(sess, np.array([s_t])))
-            # Act on the game simulator
-            res = game_simulator.step(action)
+                action = np.argmax(dqn_agent.act(sess, np.array([previous_observation])))
             # Receive the results from the game simulator
-            s_t = res["s_t"]
-            s_t_plus_1 = res["s_t_plus_1"]
-            terminal = res["terminal"]
-            r_t = res["r_t"]
-            a_t = res["a_t"]
+            observation, reward, done, info = env.step(action)
             # Store the experience
-            replay_memory.store(s_t, a_t, r_t, s_t_plus_1, terminal)
+            replay_memory.store(previous_observation, action, reward, observation, done)
+            previous_observation = observation
             # Update the policy
-            for _ in range(20):
-                mini_batch = replay_memory.sample(size=32)
+            for _ in range(50):
+                mini_batch = replay_memory.sample(size=100)
                 train_loss = dqn_agent.update(
                     sess,
                     mini_batch["s_t"],
@@ -125,11 +122,11 @@ with sv.managed_session(server.target) as sess:
                     mini_batch["terminal"]
                 )
         tf.logging.info("epoch: {0} win_rate: {1} reward: {2} loss: {3}".format(
-            i, win_count/(i+1e-5), r_t, np.mean(train_loss))
+            i, win_count/(i+1e-5), reward, np.mean(train_loss))
         )
-        if r_t > 0.5:
+        if reward > 0.5:
             win_count += 1
-        game_simulator.reset()
+        env.reset()
     # Only master save model
     if tf_conf["task"]["type"] == "master":
         tf.logging.debug("save model to {}".format(args.output_path))

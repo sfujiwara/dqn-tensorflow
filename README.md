@@ -5,8 +5,8 @@
 ```sh
 python -m trainer.task --output_path=log \
                        --max_epochs=5000 \
-                       --learning_rate=0.001 \
-                       --n_inputs=2
+                       --learning_rate=0.01 \
+                       --n_inputs=3
 ```
 
 ## Training on Local with gcloud
