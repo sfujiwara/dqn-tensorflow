@@ -13,7 +13,7 @@ class DQN:
     def __init__(self, input_shape, n_actions, learning_rate=1e-2):
         self.learning_rate = learning_rate
         self.n_actions = n_actions
-        self.gamma = 0.9
+        self.gamma = 0.99
         # Build graph
         self.x_ph = tf.placeholder(tf.float32, shape=[None]+list(input_shape), name="x_placeholder")
         self.y_ph = tf.placeholder(tf.float32, shape=[None], name="y_placeholder")
@@ -27,9 +27,14 @@ class DQN:
     @staticmethod
     def _inference(x_ph, n_actions):
         if len(x_ph.get_shape()) == 2:
-            hidden1 = tf.contrib.layers.fully_connected(x_ph, 32, activation_fn=tf.nn.relu)
-            hidden2 = tf.contrib.layers.fully_connected(hidden1, 16, activation_fn=tf.nn.relu)
-            outputs = tf.contrib.layers.fully_connected(hidden2, n_actions, activation_fn=None)
+            # outputs = tf.layers.dense(
+            #     x_ph,
+            #     n_actions,
+            #     kernel_initializer=tf.truncated_normal_initializer(stddev=0.00001)
+            # )
+            hidden1 = tf.layers.dense(x_ph, 128, activation=tf.nn.relu)
+            hidden2 = tf.layers.dense(hidden1, 128, activation=tf.nn.relu)
+            outputs = tf.layers.dense(hidden2, n_actions, activation=None)
             return outputs
         else:
             h_conv1 = tf.contrib.layers.convolution2d(inputs=x_ph, num_outputs=16, kernel_size=8, stride=4)
@@ -43,12 +48,13 @@ class DQN:
         with tf.name_scope("loss"):
             a_t_one_hot = tf.one_hot(a_ph, q_t.get_shape()[1].value)
             q_t_acted = tf.reduce_sum(q_t * a_t_one_hot, reduction_indices=1)
-            loss = tf.squared_difference(q_t_acted, y_t_ph)
+            loss = tf.reduce_mean(tf.square(q_t_acted - y_t_ph))
+            # loss = tf.squared_difference(q_t_acted, y_t_ph)
         return loss
 
     @staticmethod
     def _build_optimizer(loss, learning_rate):
-        train_op = tf.train.AdagradOptimizer(learning_rate=learning_rate).minimize(loss)
+        train_op = tf.train.ProximalAdagradOptimizer(learning_rate=learning_rate).minimize(loss)
         return train_op
 
     def update(self, sess, x_t, a_t, r_t, x_t_plus_1, terminal):

@@ -4,9 +4,10 @@
 
 ```sh
 ENV_NAME="CartPole-v1"
-python -m trainer.task --output_path summary/${ENV_NAME} \
-                       --n_episodes 100 \
-                       --learning_rate 0.0000005 \
+python -m trainer.task --output_path outputs/${ENV_NAME} \
+                       --n_episodes 500 \
+                       --learning_rate 0.0001 \
+                       --n_updates 20 \
                        --env_name ${ENV_NAME}
 ```
 
@@ -17,7 +18,7 @@ JOB_NAME="dqn`date '+%Y%m%d%H%M%S'`"
 PROJECT_ID=`gcloud config list project --format "value(core.project)"`
 TRAIN_BUCKET=gs://${PROJECT_ID}-ml
 TRAIN_PATH=${TRAIN_BUCKET}/dqn/${JOB_NAME}
-touch .dummy && gsutil cp .dummy ${TRAIN_PATH}/model/
+ENV_NAME="CartPole-v1"
 
 gcloud beta ml jobs submit training ${JOB_NAME} \
   --package-path=trainer \
@@ -29,6 +30,7 @@ gcloud beta ml jobs submit training ${JOB_NAME} \
   --output_path="${TRAIN_PATH}"
   --n_episodes=50000
   --learning_rate=0.001
+  --env_name ${ENV_NAME}
 ```
 
 ## Monitoring with TensorBoard

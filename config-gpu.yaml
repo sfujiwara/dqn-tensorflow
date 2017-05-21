@@ -3,5 +3,5 @@ trainingInput:
   masterType: standard_gpu
   workerType: standard_gpu
   parameterServerType: standard
-  workerCount: 4
-  parameterServerCount: 3
+  workerCount: 6
+  parameterServerCount: 2

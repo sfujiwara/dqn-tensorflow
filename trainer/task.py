@@ -22,17 +22,22 @@ parser.add_argument("--output_path", type=str)
 parser.add_argument("--n_episodes", type=int)
 parser.add_argument("--learning_rate", type=float)
 parser.add_argument("--env_name", type=str)
-parser.add_argument("--random_action_prob", type=float, default=0.1)
+# parser.add_argument("--random_action_prob", type=float, default=0.1)
+parser.add_argument("--batch_size", type=int, default=50)
+parser.add_argument("--n_updates", type=int, default=10)
+
 args, unknown_args = parser.parse_known_args()
 tf.logging.info("known args: {}".format(args))
 
 # Set constant values
 N_EPISODES = args.n_episodes
-N_RANDOM_ACTION = int(N_EPISODES / 20) + 1
+N_RANDOM_ACTION = 20  # int(N_EPISODES / 10) + 1
 LEARNING_RATE = args.learning_rate
 ENV_NAME = args.env_name
-RANDOM_ACTION_PROB = args.random_action_prob
+# RANDOM_ACTION_PROB = args.random_action_prob
 OUTPUT_PATH = args.output_path
+BATCH_SIZE = args.batch_size
+N_UPDATES = args.n_updates
 
 # Get environment variable for Cloud ML
 tf_conf = json.loads(os.environ.get("TF_CONFIG", "{}"))
@@ -76,7 +81,7 @@ tf.logging.info("Input Shape: {}".format(input_shape))
 tf.logging.info("The Number of Actions: {}".format(n_actions))
 
 # Create replay memory
-replay_memory = repmem.ReplayMemory()
+replay_memory = repmem.ReplayMemory(memory_size=10000)
 
 # Build graph
 with tf.Graph().as_default() as graph:
@@ -86,7 +91,6 @@ with tf.Graph().as_default() as graph:
         dqn_agent = dqn.DQN(input_shape=input_shape, learning_rate=LEARNING_RATE, n_actions=n_actions)
         global_step = tf.Variable(0, trainable=False, name="global_step")
         increment_global_step_op = global_step.assign_add(1)
-        # init_op = tf.global_variables_initializer()
     summary_writer = tf.summary.FileWriter(os.path.join(OUTPUT_PATH, "summaries"), graph=graph)
 
     with tf.train.MonitoredTrainingSession(
@@ -96,7 +100,7 @@ with tf.Graph().as_default() as graph:
         scaffold=None,
         hooks=None,
         chief_only_hooks=None,
-        save_checkpoint_secs=600,
+        save_checkpoint_secs=60,
         save_summaries_steps=None,
         save_summaries_secs=None,
         config=None,
@@ -104,20 +108,18 @@ with tf.Graph().as_default() as graph:
     ) as mon_sess:
         for i in range(N_EPISODES):
             # Play a new game
+            random_action_prob = 1.5/(np.log(i+1)+1)
             previous_observation = env.reset()
             done = False
             total_reward = 0
             while not done:
-                # Act at random on the first few games
-                if i < N_RANDOM_ACTION:
-                    action = np.random.randint(n_actions)
                 # Act at random with a fixed probability
-                elif np.random.uniform() <= RANDOM_ACTION_PROB:
+                if np.random.uniform() <= random_action_prob:
                     action = np.random.randint(n_actions)
-                    # action = 0
                 # Act following the policy on the other games
                 else:
-                    action = np.argmax(dqn_agent.act(mon_sess, np.array([previous_observation])))
+                    q = dqn_agent.act(mon_sess, np.array([previous_observation]))
+                    action = q.argmax()
                     print action,
                 # Receive the results from the game simulator
                 observation, reward, done, info = env.step(action)
@@ -126,8 +128,8 @@ with tf.Graph().as_default() as graph:
                 replay_memory.store(previous_observation, action, reward, observation, done)
                 previous_observation = observation
                 # Update the policy
-                for _ in range(10):
-                    mini_batch = replay_memory.sample(size=100)
+                for _ in range(N_UPDATES):
+                    mini_batch = replay_memory.sample(size=BATCH_SIZE)
                     train_loss = dqn_agent.update(
                         mon_sess,
                         mini_batch["s_t"],
@@ -136,12 +138,9 @@ with tf.Graph().as_default() as graph:
                         mini_batch["s_t_plus_1"],
                         mini_batch["terminal"]
                     )
-            tf.logging.info("Episode: {0} Total Reward: {1} Training Loss: {2}".format(
-                i, total_reward, np.mean(train_loss))
+            tf.logging.info(
+                "Episode: {0} Total Reward: {1} Training Loss: {2} Random Action Probability: {3}".format(
+                mon_sess.run(global_step), total_reward, np.mean(train_loss), random_action_prob)
             )
             env.reset()
             mon_sess.run(increment_global_step_op)
-        # Only master save model
-        if tf_conf["task"]["type"] == "master":
-            tf.logging.debug("save model to {}".format(args.output_path))
-            dqn_agent.save_model(mon_sess, args.output_path)

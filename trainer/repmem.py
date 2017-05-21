@@ -13,7 +13,6 @@ class ReplayMemory:
         self.df = pd.DataFrame(columns=COLUMNS)
         self.memory_size = memory_size
 
-    # TODO: Restrict memory usage
     def store(self, s_t, a_t, r_t, x_t_plus_1, terminal):
         row = pd.Series(data=[s_t, a_t, r_t, x_t_plus_1, terminal], index=COLUMNS)
         self.df = self.df.append(row, ignore_index=True)
