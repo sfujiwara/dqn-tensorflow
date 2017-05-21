@@ -3,20 +3,11 @@
 ## Training on Local
 
 ```sh
-python -m trainer.task --output_path=log \
-                       --max_epochs=5000 \
-                       --learning_rate=0.01 \
-                       --n_inputs=3
-```
-
-## Training on Local with gcloud
-
-```
-gcloud ml-engine local train --module-name trainer.task \
-          --package-path trainer \
-          --distributed \
-          --parameter-server-count 1 \
-          --worker-count 1
+ENV_NAME="CartPole-v1"
+python -m trainer.task --output_path summary/${ENV_NAME} \
+                       --n_episodes 100 \
+                       --learning_rate 0.0000005 \
+                       --env_name ${ENV_NAME}
 ```
 
 ## Training on Cloud Machine Learning
@@ -36,7 +27,7 @@ gcloud beta ml jobs submit training ${JOB_NAME} \
   --config=config.yaml \
   -- \
   --output_path="${TRAIN_PATH}"
-  --max_epochs=50000
+  --n_episodes=50000
   --learning_rate=0.001
 ```
 

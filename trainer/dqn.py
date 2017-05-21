@@ -10,12 +10,12 @@ import tensorflow as tf
 
 class DQN:
 
-    def __init__(self, input_size=84, learning_rate=1e-4, n_actions=5):
+    def __init__(self, input_shape, n_actions, learning_rate=1e-2):
         self.learning_rate = learning_rate
         self.n_actions = n_actions
         self.gamma = 0.9
         # Build graph
-        self.x_ph = tf.placeholder(tf.float32, shape=[None, input_size, input_size, 3], name="x_placeholder")
+        self.x_ph = tf.placeholder(tf.float32, shape=[None]+list(input_shape), name="x_placeholder")
         self.y_ph = tf.placeholder(tf.float32, shape=[None], name="y_placeholder")
         self.a_ph = tf.placeholder(tf.int64, shape=[None], name="a_placeholder")
         self.q = self._inference(self.x_ph, self.n_actions)
@@ -25,11 +25,11 @@ class DQN:
         self.saver = tf.train.Saver()
 
     @staticmethod
-    def _inference(x_ph, n_actions, simple=True):
-        if simple:
-            x_flat = tf.contrib.layers.flatten(x_ph)
-            hidden1 = tf.contrib.layers.fully_connected(x_flat, 32, activation_fn=tf.nn.relu)
-            outputs = tf.contrib.layers.fully_connected(hidden1, n_actions, activation_fn=None)
+    def _inference(x_ph, n_actions):
+        if len(x_ph.get_shape()) == 2:
+            hidden1 = tf.contrib.layers.fully_connected(x_ph, 32, activation_fn=tf.nn.relu)
+            hidden2 = tf.contrib.layers.fully_connected(hidden1, 16, activation_fn=tf.nn.relu)
+            outputs = tf.contrib.layers.fully_connected(hidden2, n_actions, activation_fn=None)
             return outputs
         else:
             h_conv1 = tf.contrib.layers.convolution2d(inputs=x_ph, num_outputs=16, kernel_size=8, stride=4)
