@@ -94,7 +94,8 @@ with tf.Graph().as_default() as graph:
         dqn_agent = dqn.DQN(input_shape=input_shape, learning_rate=LEARNING_RATE, n_actions=n_actions)
         global_step = tf.Variable(0, trainable=False, name="global_step")
         increment_global_step_op = global_step.assign_add(1)
-    summary_writer = tf.summary.FileWriter(os.path.join(OUTPUT_PATH, "summaries"), graph=graph)
+    if tf_conf["task"]["type"] == "master":
+        summary_writer = tf.summary.FileWriter(os.path.join(OUTPUT_PATH, "summaries"), graph=graph)
 
     with tf.train.MonitoredTrainingSession(
         master=server.target,
