@@ -20,16 +20,16 @@ TRAIN_BUCKET=gs://${PROJECT_ID}-ml
 TRAIN_PATH=${TRAIN_BUCKET}/dqn/${JOB_NAME}
 ENV_NAME="CartPole-v1"
 
-gcloud beta ml jobs submit training ${JOB_NAME} \
+gcloud ml-engine jobs submit training ${JOB_NAME} \
   --package-path=trainer \
   --module-name=trainer.task \
   --staging-bucket="gs://${PROJECT_ID}-ml" \
   --region=us-central1 \
   --config=config.yaml \
   -- \
-  --output_path="${TRAIN_PATH}"
-  --n_episodes=50000
-  --learning_rate=0.001
+  --output_path="${TRAIN_PATH}" \
+  --n_episodes=100 \
+  --learning_rate=0.001 \
   --env_name ${ENV_NAME}
 ```
 

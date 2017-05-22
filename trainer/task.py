@@ -16,6 +16,9 @@ from trainer import chasing
 # Set log level
 tf.logging.set_verbosity(tf.logging.DEBUG)
 
+# Print TensorFlow version
+tf.logging.info(tf.__version__)
+
 # Parse arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--output_path", type=str)
@@ -94,17 +97,17 @@ with tf.Graph().as_default() as graph:
     summary_writer = tf.summary.FileWriter(os.path.join(OUTPUT_PATH, "summaries"), graph=graph)
 
     with tf.train.MonitoredTrainingSession(
-        master='',
-        is_chief=True,
+        master=server.target,
+        is_chief=(tf_conf["task"]["type"] == "master"),
         checkpoint_dir=os.path.join(OUTPUT_PATH, "checkpoints"),
         scaffold=None,
         hooks=None,
         chief_only_hooks=None,
         save_checkpoint_secs=60,
         save_summaries_steps=None,
-        save_summaries_secs=None,
+        # save_summaries_secs=None,
         config=None,
-        stop_grace_period_secs=120,
+        # stop_grace_period_secs=120,
     ) as mon_sess:
         for i in range(N_EPISODES):
             # Play a new game
@@ -120,7 +123,6 @@ with tf.Graph().as_default() as graph:
                 else:
                     q = dqn_agent.act(mon_sess, np.array([previous_observation]))
                     action = q.argmax()
-                    print action,
                 # Receive the results from the game simulator
                 observation, reward, done, info = env.step(action)
                 total_reward += reward
