@@ -84,7 +84,7 @@ tf.logging.info("Input Shape: {}".format(input_shape))
 tf.logging.info("The Number of Actions: {}".format(n_actions))
 
 # Create replay memory
-replay_memory = repmem.ReplayMemory(memory_size=10000)
+replay_memory = repmem.ReplayMemory(memory_size=2000)
 
 # Build graph
 with tf.Graph().as_default() as graph:
@@ -94,8 +94,8 @@ with tf.Graph().as_default() as graph:
         dqn_agent = dqn.DQN(input_shape=input_shape, learning_rate=LEARNING_RATE, n_actions=n_actions)
         global_step = tf.Variable(0, trainable=False, name="global_step")
         increment_global_step_op = global_step.assign_add(1)
-    if tf_conf["task"]["type"] == "master":
-        summary_writer = tf.summary.FileWriter(os.path.join(OUTPUT_PATH, "summaries"), graph=graph)
+        if tf_conf["task"]["type"] == "master":
+            summary_writer = tf.summary.FileWriter(os.path.join(OUTPUT_PATH, "summaries"), graph=graph)
 
     with tf.train.MonitoredTrainingSession(
         master=server.target,
@@ -110,15 +110,15 @@ with tf.Graph().as_default() as graph:
         config=None,
         # stop_grace_period_secs=120,
     ) as mon_sess:
+        random_action_prob = 1.0
         for i in range(N_EPISODES):
             # Play a new game
-            random_action_prob = 1.5/(np.log(i+1)+1)
             previous_observation = env.reset()
             done = False
             total_reward = 0
-            while not done:
+            for j in range(1000):
                 # Act at random with a fixed probability
-                if np.random.uniform() <= random_action_prob:
+                if np.random.rand() <= random_action_prob:
                     action = np.random.randint(n_actions)
                 # Act following the policy on the other games
                 else:
@@ -126,24 +126,24 @@ with tf.Graph().as_default() as graph:
                     action = q.argmax()
                 # Receive the results from the game simulator
                 observation, reward, done, info = env.step(action)
+                reward = reward if not done else -10
                 total_reward += reward
                 # Store the experience
                 replay_memory.store(previous_observation, action, reward, observation, done)
+                # replay_memory.append((previous_observation, action, reward, observation, done))
                 previous_observation = observation
                 # Update the policy
                 for _ in range(N_UPDATES):
                     mini_batch = replay_memory.sample(size=BATCH_SIZE)
                     train_loss = dqn_agent.update(
-                        mon_sess,
-                        mini_batch["s_t"],
-                        mini_batch["a_t"],
-                        mini_batch["r_t"],
-                        mini_batch["s_t_plus_1"],
-                        mini_batch["terminal"]
+                        mon_sess, mini_batch[0], mini_batch[1], mini_batch[2], mini_batch[3], mini_batch[4]
                     )
+                if done:
+                    break
             tf.logging.info(
                 "Episode: {0} Total Reward: {1} Training Loss: {2} Random Action Probability: {3}".format(
-                mon_sess.run(global_step), total_reward, np.mean(train_loss), random_action_prob)
+                mon_sess.run(global_step), j, np.mean(train_loss), random_action_prob)
             )
             env.reset()
             mon_sess.run(increment_global_step_op)
+            random_action_prob = max(random_action_prob * 0.999, 0.05)

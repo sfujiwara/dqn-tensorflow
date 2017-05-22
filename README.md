@@ -5,9 +5,10 @@
 ```sh
 ENV_NAME="CartPole-v1"
 python -m trainer.task --output_path outputs/${ENV_NAME} \
-                       --n_episodes 500 \
-                       --learning_rate 0.0001 \
-                       --n_updates 20 \
+                       --n_episodes 5000 \
+                       --learning_rate 0.01 \
+                       --n_updates 1 \
+                       --batch_size 32 \
                        --env_name ${ENV_NAME}
 ```
 
@@ -25,12 +26,13 @@ gcloud ml-engine jobs submit training ${JOB_NAME} \
   --module-name=trainer.task \
   --staging-bucket="gs://${PROJECT_ID}-ml" \
   --region=us-central1 \
-  --config=config.yaml \
+  --config=config-gpu.yaml \
   -- \
   --output_path="${TRAIN_PATH}" \
   --n_episodes=100 \
-  --learning_rate=0.001 \
-  --env_name ${ENV_NAME}
+  --learning_rate=0.00001 \
+  --n_updates=100 \
+  --env_name=${ENV_NAME}
 ```
 
 ## Monitoring with TensorBoard

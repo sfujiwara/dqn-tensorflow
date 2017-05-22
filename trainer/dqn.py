@@ -13,7 +13,7 @@ class DQN:
     def __init__(self, input_shape, n_actions, learning_rate=1e-2):
         self.learning_rate = learning_rate
         self.n_actions = n_actions
-        self.gamma = 0.99
+        self.gamma = 0.95
         # Build graph
         self.x_ph = tf.placeholder(tf.float32, shape=[None]+list(input_shape), name="x_placeholder")
         self.y_ph = tf.placeholder(tf.float32, shape=[None], name="y_placeholder")
@@ -22,25 +22,16 @@ class DQN:
         self.loss = self._build_loss(self.y_ph, self.q, self.a_ph)
         self.train_ops = self._build_optimizer(self.loss, learning_rate)
         self.merged = tf.summary.merge_all()
-        self.saver = tf.train.Saver()
+        # self.saver = tf.train.Saver()
 
     @staticmethod
     def _inference(x_ph, n_actions):
-        if len(x_ph.get_shape()) == 2:
-            # outputs = tf.layers.dense(
-            #     x_ph,
-            #     n_actions,
-            #     kernel_initializer=tf.truncated_normal_initializer(stddev=0.00001)
-            # )
-            hidden1 = tf.layers.dense(x_ph, 128, activation=tf.nn.relu)
-            hidden2 = tf.layers.dense(hidden1, 128, activation=tf.nn.relu)
+        with tf.variable_scope("hidden1"):
+            hidden1 = tf.layers.dense(x_ph, 20, activation=tf.nn.relu)
+        with tf.variable_scope("hidden2"):
+            hidden2 = tf.layers.dense(hidden1, 20, activation=tf.nn.relu)
+        with tf.variable_scope("output"):
             outputs = tf.layers.dense(hidden2, n_actions, activation=None)
-            return outputs
-        else:
-            h_conv1 = tf.contrib.layers.convolution2d(inputs=x_ph, num_outputs=16, kernel_size=8, stride=4)
-            h_conv2 = tf.contrib.layers.convolution2d(inputs=h_conv1, num_outputs=32, kernel_size=4, stride=2)
-            h_conv2_flat = tf.contrib.layers.flatten(h_conv2)
-            outputs = tf.contrib.layers.fully_connected(h_conv2_flat, n_actions, activation_fn=None)
         return outputs
 
     @staticmethod
@@ -54,7 +45,7 @@ class DQN:
 
     @staticmethod
     def _build_optimizer(loss, learning_rate):
-        train_op = tf.train.ProximalAdagradOptimizer(learning_rate=learning_rate).minimize(loss)
+        train_op = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
         return train_op
 
     def update(self, sess, x_t, a_t, r_t, x_t_plus_1, terminal):
