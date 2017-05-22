@@ -22,7 +22,7 @@ class DQN:
         self.loss = self._build_loss(self.y_ph, self.q, self.a_ph)
         self.train_ops = self._build_optimizer(self.loss, learning_rate)
         self.merged = tf.summary.merge_all()
-        # self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver()
 
     @staticmethod
     def _inference(x_ph, n_actions):
@@ -51,7 +51,8 @@ class DQN:
     def update(self, sess, x_t, a_t, r_t, x_t_plus_1, terminal):
         # Compute target score
         fd = {self.x_ph: x_t_plus_1}
-        q_t_plus_1 = np.argmax(sess.run(self.q, feed_dict=fd), axis=1)
+        q_t_plus_1 = np.max(sess.run(self.q, feed_dict=fd), axis=1)
+        # print q_t_plus_1
         y_t = r_t + q_t_plus_1 * (1-terminal) * self.gamma
         # Run optimization operation
         fd = {self.x_ph: x_t, self.y_ph: y_t, self.a_ph: a_t}

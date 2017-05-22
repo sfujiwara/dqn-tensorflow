@@ -130,7 +130,6 @@ with tf.Graph().as_default() as graph:
                 total_reward += reward
                 # Store the experience
                 replay_memory.store(previous_observation, action, reward, observation, done)
-                # replay_memory.append((previous_observation, action, reward, observation, done))
                 previous_observation = observation
                 # Update the policy
                 for _ in range(N_UPDATES):
@@ -142,7 +141,7 @@ with tf.Graph().as_default() as graph:
                     break
             tf.logging.info(
                 "Episode: {0} Total Reward: {1} Training Loss: {2} Random Action Probability: {3}".format(
-                mon_sess.run(global_step), j, np.mean(train_loss), random_action_prob)
+                mon_sess.run(global_step), total_reward, np.mean(train_loss), random_action_prob)
             )
             env.reset()
             mon_sess.run(increment_global_step_op)
