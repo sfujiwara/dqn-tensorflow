@@ -25,7 +25,6 @@ parser.add_argument("--output_path", type=str)
 parser.add_argument("--n_episodes", type=int)
 parser.add_argument("--learning_rate", type=float)
 parser.add_argument("--env_name", type=str)
-# parser.add_argument("--random_action_prob", type=float, default=0.1)
 parser.add_argument("--batch_size", type=int, default=50)
 parser.add_argument("--n_updates", type=int, default=10)
 
@@ -34,10 +33,8 @@ tf.logging.info("known args: {}".format(args))
 
 # Set constant values
 N_EPISODES = args.n_episodes
-N_RANDOM_ACTION = 20  # int(N_EPISODES / 10) + 1
 LEARNING_RATE = args.learning_rate
 ENV_NAME = args.env_name
-# RANDOM_ACTION_PROB = args.random_action_prob
 OUTPUT_PATH = args.output_path
 BATCH_SIZE = args.batch_size
 N_UPDATES = args.n_updates
