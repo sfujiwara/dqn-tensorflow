@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import os
 import tensorflow as tf
 import gym
 import numpy as np
@@ -9,12 +8,11 @@ from trainer import dqn
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--episode", type=int)
+parser.add_argument("--checkpoint", type=str)
 args, unknown_args = parser.parse_known_args()
 
-EPISODE = args.episode
 ENV_NAME = "CartPole-v1"
-CHECKPOINT_DIR = os.path.join("outputs", ENV_NAME, "checkpoints", "model.ckpt-{}".format(EPISODE))
+CHECKPOINT = args.checkpoint
 
 env = gym.make(ENV_NAME)
 input_shape = env.observation_space.shape
@@ -28,7 +26,7 @@ with tf.Session(graph=g) as sess:
     # Play game
     observation = env.reset()
     done = False
-    agent.saver.restore(sess, CHECKPOINT_DIR)
+    agent.saver.restore(sess, CHECKPOINT)
     while not done:
         env.render()
         action = np.argmax(agent.act(sess, x_t=[observation])[0])
