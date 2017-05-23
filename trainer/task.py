@@ -91,8 +91,12 @@ with tf.Graph().as_default() as graph:
         dqn_agent = dqn.DQN(input_shape=input_shape, learning_rate=LEARNING_RATE, n_actions=n_actions)
         global_step = tf.Variable(0, trainable=False, name="global_step")
         increment_global_step_op = global_step.assign_add(1)
+        # Only master build summary graph for TensorBoard
         if tf_conf["task"]["type"] == "master":
+            reward_summary_ph = tf.placeholder(tf.float32)
             summary_writer = tf.summary.FileWriter(os.path.join(OUTPUT_PATH, "summaries"), graph=graph)
+            tf.summary.scalar(name="reward", tensor=reward_summary_ph)
+            summary_op = tf.summary.merge_all()
 
     with tf.train.MonitoredTrainingSession(
         master=server.target,
@@ -108,7 +112,8 @@ with tf.Graph().as_default() as graph:
         # stop_grace_period_secs=120,
     ) as mon_sess:
         random_action_prob = 1.0
-        for i in range(N_EPISODES):
+        # for i in range(N_EPISODES):
+        while True:
             # Play a new game
             previous_observation = env.reset()
             done = False
@@ -123,7 +128,7 @@ with tf.Graph().as_default() as graph:
                     action = q.argmax()
                 # Receive the results from the game simulator
                 observation, reward, done, info = env.step(action)
-                reward = reward if not done else -10
+                # reward = reward if not done else -10
                 total_reward += reward
                 # Store the experience
                 replay_memory.store(previous_observation, action, reward, observation, done)
@@ -142,4 +147,12 @@ with tf.Graph().as_default() as graph:
             )
             env.reset()
             mon_sess.run(increment_global_step_op)
-            random_action_prob = max(random_action_prob * 0.999, 0.05)
+            random_action_prob = max(0.999**mon_sess.run(global_step), 0.05)
+            # Only master write summary
+            if tf_conf["task"]["type"] == "master":
+                summary_str = mon_sess.run(summary_op, {reward_summary_ph: total_reward})
+                summary_writer.add_summary(summary_str, mon_sess.run(global_step))
+                summary_writer.flush()
+            # Termination
+            if mon_sess.run(global_step) >= N_EPISODES:
+                break
