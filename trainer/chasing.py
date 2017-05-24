@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+from gym import Env, spaces
 
 
-class ChasingSimulator:
+class ChasingEnv(Env):
+    metadata = {"render.modes": ["human"]}
 
     def __init__(self, field_size=84):
+        self.action_space = spaces.Discrete(5)
+        self.observation_space = spaces.Box(-1, 1, field_size**2*3)
         self.field_size = field_size
         self.iter = 0
         self.terminal = False
@@ -13,7 +17,7 @@ class ChasingSimulator:
         self.enemy_position = None
         self.reset()
 
-    def reset(self):
+    def _reset(self):
         """
         Initialize player position, enemy position, structure, and iteration.
         :return: None
@@ -27,7 +31,7 @@ class ChasingSimulator:
         # TODO: Generate walls at random here
         return self.state()
 
-    def step(self, action):
+    def _step(self, action):
         # Update player position
         # Do nothing
         if action == 0:
@@ -55,25 +59,33 @@ class ChasingSimulator:
         elif self.iter >= 5 * self.field_size:
             self.terminal = True
             reward = self.compute_reward()
+            # reward = -1.
         # Give reward for distance
         else:
             self.terminal = False
             reward = self.compute_reward()
+            # reward = 0.
         self.iter += 1
         info = None
         return self.state(), reward, self.terminal, info
 
+    def _render(self, mode="human", close=False):
+        field = np.array([["."]*self.field_size]*self.field_size)
+        field[self.player_position[0], self.player_position[1]] = "P"
+        field[self.enemy_position[0], self.enemy_position[1]] = "E"
+        field_str = ""
+        for i in field:
+            for j in i:
+                field_str += j
+                field_str += "\t"
+            field_str += "\n"
+        print(field_str)
+
     def compute_reward(self):
         dist = np.linalg.norm(self.player_position - self.enemy_position)
         max_dist = np.linalg.norm([self.field_size, self.field_size])
-        reward = - dist / max_dist * 10
+        reward = - dist / max_dist
         return reward
-
-    def render(self):
-        field = np.array([["-"]*self.field_size]*self.field_size)
-        field[self.player_position[0], self.player_position[1]] = "P"
-        field[self.enemy_position[0], self.enemy_position[1]] = "E"
-        print(field)
 
     def state(self):
         s = np.zeros([self.field_size, self.field_size, 3], dtype=np.float32)
@@ -82,14 +94,13 @@ class ChasingSimulator:
         # Set enemy position on second kernel
         s[self.enemy_position[0], self.enemy_position[1], 1] = 1
         # TODO: Set structures on third kernel
-        return s
+        return s.flatten()
 
 if __name__ == "__main__":
-    env = ChasingSimulator(field_size=4)
-    n_action = 4
-    # Use env same as OpenAI Gym: https://gym.openai.com
+    env = ChasingEnv(field_size=4)
+    n_action = 5
     observation = env.reset()
     for _ in range(1000):
-        env.render()
+        # env.render()
         action = np.random.randint(n_action)
         observation, reward, done, info = env.step(action)

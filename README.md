@@ -3,7 +3,9 @@
 ## Training on Local
 
 ```sh
-ENV_NAME="CartPole-v1"
+# ENV_NAME="CartPole-v1"
+ENV_NAME="Chasing-v1"
+
 python -m trainer.task --output_path outputs/${ENV_NAME} \
                        --n_episodes 1000 \
                        --learning_rate 0.001 \

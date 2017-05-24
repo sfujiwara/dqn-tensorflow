@@ -38,6 +38,7 @@ ENV_NAME = args.env_name
 OUTPUT_PATH = args.output_path
 BATCH_SIZE = args.batch_size
 N_UPDATES = args.n_updates
+FIELD_SIZE = 8
 
 # Get environment variable for Cloud ML
 tf_conf = json.loads(os.environ.get("TF_CONFIG", "{}"))
@@ -72,8 +73,12 @@ device_fn = tf.train.replica_device_setter(
 tf.logging.debug("/job:{0}/task:{1} build graph".format(tf_conf["task"]["type"], tf_conf["task"]["index"]))
 
 # Create game simulator
-# env = chasing.ChasingSimulator(field_size=N_INPUTS)
-env = gym.make(ENV_NAME)
+if ENV_NAME == "Chasing-v1":
+    # Use my environment
+    env = chasing.ChasingEnv(field_size=FIELD_SIZE)
+else:
+    # Use OpenAI Gym environment
+    env = gym.make(ENV_NAME)
 input_shape = env.observation_space.shape
 n_actions = env.action_space.n
 

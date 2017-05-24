@@ -4,17 +4,26 @@ import argparse
 import tensorflow as tf
 import gym
 import numpy as np
-from trainer import dqn
+from trainer import dqn, chasing
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--checkpoint", type=str)
+parser.add_argument("--checkpoint", type=str, default="CartPole-v1")
+parser.add_argument("--env", type=str)
+parser.add_argument("--field_size", type=int, default=8)
 args, unknown_args = parser.parse_known_args()
 
-ENV_NAME = "CartPole-v1"
+ENV_NAME = args.env
 CHECKPOINT = args.checkpoint
+FIELD_SIZE = args.field_size
 
-env = gym.make(ENV_NAME)
+# Create game simulator
+if ENV_NAME == "Chasing-v1":
+    # Use my environment
+    env = chasing.ChasingEnv(field_size=8)
+else:
+    # Use OpenAI Gym environment
+    env = gym.make(ENV_NAME)
 input_shape = env.observation_space.shape
 n_actions = env.action_space.n
 
