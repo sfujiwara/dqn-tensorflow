@@ -18,10 +18,6 @@ class ChasingEnv(Env):
         self.reset()
 
     def _reset(self):
-        """
-        Initialize player position, enemy position, structure, and iteration.
-        :return: None
-        """
         self.terminal = False
         self.iter = 0
         # Decide player position at random
