@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Default modules
-import json
+import os
 
 # Additional modules
 import numpy as np
@@ -22,7 +22,6 @@ class DQN:
         self.loss = self._build_loss(self.y_ph, self.q, self.a_ph)
         self.train_ops = self._build_optimizer(self.loss, learning_rate)
         self.merged = tf.summary.merge_all()
-        self.saver = tf.train.Saver()
 
     @staticmethod
     def _inference(x_ph, n_actions):
@@ -65,20 +64,39 @@ class DQN:
     def write_summary(self, sess):
         return sess.run(self.merged)
 
-    def save_model(self, session, dir):
-        input_size = self.x_ph.get_shape()[1].value
-        # Create a new graph for prediction
-        with tf.Graph().as_default() as g:
-            x = tf.placeholder(tf.float32, shape=[None, input_size, input_size, 3], name="x_placeholder")
-            q = self._inference(x, self.n_actions)
-            # Define key element
+    def save_model(self, dir):
+        latest_checkpoint = tf.train.latest_checkpoint(os.path.join(dir, "checkpoints"))
+        model_dir = os.path.join(dir, "models", "episode-{}".format(latest_checkpoint.split("-")[-1]))
+        # Save model for deployment on ML Engine
+        with tf.Graph().as_default():
             input_key = tf.placeholder(tf.int64, [None, ], name="key")
             output_key = tf.identity(input_key)
-            # Define API inputs/outpus object
-            inputs = {"key": input_key.name, "state": x.name}
-            outputs = {"key": output_key.name, "q": q.name}
-            g.add_to_collection("inputs", json.dumps(inputs))
-            g.add_to_collection("outputs", json.dumps(outputs))
-            # Save model
-            tf.train.Saver().export_meta_graph(filename="{}/model/export.meta".format(dir))
-            self.saver.save(session, "{}/model/export".format(dir), write_meta_graph=False)
+            x_ph = tf.placeholder(tf.float32, shape=self.x_ph.get_shape(), name="x_ph")
+            q = self._inference(x_ph, self.n_actions)
+            saver = tf.train.Saver()
+            input_signatures = {
+                "key": tf.saved_model.utils.build_tensor_info(input_key),
+                "state": tf.saved_model.utils.build_tensor_info(x_ph)
+            }
+            output_signatures = {
+                "key": tf.saved_model.utils.build_tensor_info(output_key),
+                "q": tf.saved_model.utils.build_tensor_info(q)
+            }
+            predict_signature_def = tf.saved_model.signature_def_utils.build_signature_def(
+                input_signatures,
+                output_signatures,
+                tf.saved_model.signature_constants.PREDICT_METHOD_NAME
+            )
+            builder = tf.saved_model.builder.SavedModelBuilder(model_dir)
+            with tf.Session() as sess:
+                # Restore variables from latest checkpoint
+                saver.restore(sess, latest_checkpoint)
+                builder.add_meta_graph_and_variables(
+                    sess=sess,
+                    tags=[tf.saved_model.tag_constants.SERVING],
+                    signature_def_map={
+                        tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: predict_signature_def
+                    },
+                    assets_collection=tf.get_collection(tf.GraphKeys.ASSET_FILEPATHS)
+                )
+                builder.save()

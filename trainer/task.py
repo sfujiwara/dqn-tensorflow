@@ -116,14 +116,13 @@ with tf.Graph().as_default() as graph:
         config=None,
         # stop_grace_period_secs=120,
     ) as mon_sess:
-        random_action_prob = 1.0
-        # for i in range(N_EPISODES):
+        random_action_prob = max(0.999 ** mon_sess.run(global_step), 0.05)
         while True:
             # Play a new game
             previous_observation = env.reset()
             done = False
             total_reward = 0
-            for j in range(1000):
+            while not done:
                 # Act at random with a fixed probability
                 if np.random.rand() <= random_action_prob:
                     action = np.random.randint(n_actions)
@@ -144,15 +143,12 @@ with tf.Graph().as_default() as graph:
                     train_loss = dqn_agent.update(
                         mon_sess, mini_batch[0], mini_batch[1], mini_batch[2], mini_batch[3], mini_batch[4]
                     )
-                if done:
-                    break
             tf.logging.info(
                 "Episode: {0} Total Reward: {1} Training Loss: {2} Random Action Probability: {3}".format(
                 mon_sess.run(global_step), total_reward, np.mean(train_loss), random_action_prob)
             )
             env.reset()
             mon_sess.run(increment_global_step_op)
-            random_action_prob = max(0.999**mon_sess.run(global_step), 0.05)
             # Only master write summary
             if tf_conf["task"]["type"] == "master":
                 summary_str = mon_sess.run(summary_op, {reward_summary_ph: total_reward})
@@ -161,3 +157,6 @@ with tf.Graph().as_default() as graph:
             # Termination
             if mon_sess.run(global_step) >= N_EPISODES:
                 break
+
+        if tf_conf["task"]["type"] == "master":
+            dqn_agent.save_model(dir=OUTPUT_PATH)
