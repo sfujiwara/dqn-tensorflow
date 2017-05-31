@@ -14,8 +14,6 @@ python -m trainer.task --output_path outputs/${ENV_NAME} \
                        --env_name ${ENV_NAME}
 ```
 
-![](img/CartPole-v1.gif)
-
 ## Play Game by Trained Model
 
 ```sh

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import os
-from PIL import Image
 import tensorflow as tf
 import gym
 from trainer import chasing
@@ -31,9 +29,6 @@ n_actions = env.action_space.n
 frames = []
 
 with tf.Graph().as_default() as g:
-    # agent = dqn.DQN(input_shape=input_shape, n_actions=n_actions, learning_rate=1e-1)
-    # saver = tf.train.Saver(write_version=2)
-
     with tf.Session(graph=g) as sess:
         meta_graph = tf.saved_model.loader.load(
             sess=sess,
@@ -52,14 +47,8 @@ with tf.Graph().as_default() as g:
         # Play game
         observation = env.reset()
         done = False
-        # saver.restore(sess, CHECKPOINT)
         while not done:
-            # env.render()
-            frames.append(Image.fromarray(env.render(mode='rgb_array')))
+            env.render()
             action = sess.run(q, feed_dict={x_ph: [observation]}).argmax()
             observation, reward, done, info = env.step(action)
         env.close()
-
-with open(os.path.join("img", "{}.gif".format(ENV_NAME)), "wb") as f:
-    im = Image.new('RGB', frames[0].size)
-    im.save(f, save_all=True, append_images=frames)
