@@ -17,7 +17,13 @@ python -m trainer.task --output_path outputs/${ENV_NAME} \
 ## Play Game by Trained Model
 
 ```sh
-python play_game.py --checkpoint outputs/CartPole-v1/checkpoints/model.ckpt-1000
+# Specify export directory for example:
+EXPORT_DIR="outputs/CartPole-v1/models/episode-4970"
+
+# Specify the name of environment for example:
+ENV_NAME="CartPole-v1"
+
+python -m utils.play_game --env ${ENV_NAME} --export_dir ${EXPORT_DIR}
 ```
 
 ## Training on Cloud Machine Learning

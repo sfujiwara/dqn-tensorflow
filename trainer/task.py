@@ -116,8 +116,8 @@ with tf.Graph().as_default() as graph:
         config=None,
         # stop_grace_period_secs=120,
     ) as mon_sess:
-        random_action_prob = max(0.999 ** mon_sess.run(global_step), 0.05)
         while True:
+            random_action_prob = max(0.999 ** mon_sess.run(global_step), 0.05)
             # Play a new game
             previous_observation = env.reset()
             done = False
