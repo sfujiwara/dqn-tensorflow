@@ -2,7 +2,7 @@
 
 JOB_NAME="metaltile`date '+%Y%m%d%H%M%S'`"
 PROJECT_ID=`gcloud config list project --format "value(core.project)"`
-TRAIN_PATH==gs://${PROJECT_ID}-ml/dqn/${JOB_NAME}
+TRAIN_PATH=gs://${PROJECT_ID}-ml/dqn/${JOB_NAME}
 ENV_NAME="MetalTile-v1"
 
 gcloud ml-engine jobs submit training ${JOB_NAME} \
