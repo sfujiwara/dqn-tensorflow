@@ -55,12 +55,10 @@ class ChasingEnv(Env):
         elif self.iter >= 5 * self.field_size:
             self.terminal = True
             reward = self.compute_reward()
-            # reward = -1.
         # Give reward for distance
         else:
             self.terminal = False
             reward = self.compute_reward()
-            # reward = 0.
         self.iter += 1
         info = None
         return self.state(), reward, self.terminal, info
@@ -80,7 +78,7 @@ class ChasingEnv(Env):
     def compute_reward(self):
         dist = np.linalg.norm(self.player_position - self.enemy_position)
         max_dist = np.linalg.norm([self.field_size, self.field_size])
-        reward = - dist / max_dist
+        reward = - dist / max_dist / 100
         return reward
 
     def state(self):
@@ -100,3 +98,4 @@ if __name__ == "__main__":
         # env.render()
         action = np.random.randint(n_action)
         observation, reward, done, info = env.step(action)
+        print(reward)
