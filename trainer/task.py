@@ -27,6 +27,7 @@ parser.add_argument("--learning_rate", type=float)
 parser.add_argument("--env_name", type=str)
 parser.add_argument("--batch_size", type=int, default=50)
 parser.add_argument("--n_updates", type=int, default=10)
+parser.add_argument("--field_size", type=int, default=16)
 
 args, unknown_args = parser.parse_known_args()
 tf.logging.info("known args: {}".format(args))
@@ -38,7 +39,7 @@ ENV_NAME = args.env_name
 OUTPUT_PATH = args.output_path
 BATCH_SIZE = args.batch_size
 N_UPDATES = args.n_updates
-FIELD_SIZE = 8
+FIELD_SIZE = args.field_size
 
 # Get environment variable for Cloud ML
 tf_conf = json.loads(os.environ.get("TF_CONFIG", "{}"))
