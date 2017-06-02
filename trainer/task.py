@@ -10,7 +10,7 @@ import tensorflow as tf
 import gym
 
 from trainer import dqn, repmem
-from trainer import chasing
+from trainer import metaltile
 
 
 # Set log level
@@ -74,9 +74,9 @@ device_fn = tf.train.replica_device_setter(
 tf.logging.debug("/job:{0}/task:{1} build graph".format(tf_conf["task"]["type"], tf_conf["task"]["index"]))
 
 # Create game simulator
-if ENV_NAME == "Chasing-v1":
+if ENV_NAME == "MetalTile-v1":
     # Use my environment
-    env = chasing.ChasingEnv(field_size=FIELD_SIZE)
+    env = metaltile.MetalTileEnv(field_size=FIELD_SIZE)
 else:
     # Use OpenAI Gym environment
     env = gym.make(ENV_NAME)

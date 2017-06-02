@@ -3,7 +3,7 @@
 import argparse
 import tensorflow as tf
 import gym
-from trainer import chasing
+from trainer import metaltile
 
 
 parser = argparse.ArgumentParser()
@@ -19,7 +19,7 @@ FIELD_SIZE = args.field_size
 # Create game simulator
 if ENV_NAME == "Chasing-v1":
     # Use my environment
-    env = chasing.ChasingEnv(field_size=8)
+    env = metaltile.MetalTileEnv(field_size=8)
 else:
     # Use OpenAI Gym environment
     env = gym.make(ENV_NAME)

@@ -4,7 +4,7 @@ import numpy as np
 from gym import Env, spaces
 
 
-class ChasingEnv(Env):
+class MetalTileEnv(Env):
     metadata = {"render.modes": ["human"]}
 
     def __init__(self, field_size=84):
@@ -91,7 +91,7 @@ class ChasingEnv(Env):
         return s.flatten()
 
 if __name__ == "__main__":
-    env = ChasingEnv(field_size=4)
+    env = MetalTileEnv(field_size=4)
     n_action = 5
     observation = env.reset()
     for _ in range(1000):
