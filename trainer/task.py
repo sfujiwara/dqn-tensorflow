@@ -28,6 +28,8 @@ parser.add_argument("--env_name", type=str)
 parser.add_argument("--batch_size", type=int, default=50)
 parser.add_argument("--n_updates", type=int, default=10)
 parser.add_argument("--field_size", type=int, default=16)
+parser.add_argument("--random_action_decay", type=float, default=0.999)
+parser.add_argument("--replay_memory_size", type=int, default=10000)
 
 args, unknown_args = parser.parse_known_args()
 tf.logging.info("known args: {}".format(args))
@@ -40,6 +42,8 @@ OUTPUT_PATH = args.output_path
 BATCH_SIZE = args.batch_size
 N_UPDATES = args.n_updates
 FIELD_SIZE = args.field_size
+RANDOM_ACTION_DECAY = args.random_action_decay
+REPLAY_MEMORY_SIZE = args.replay_memory_size
 
 # Get environment variable for Cloud ML
 tf_conf = json.loads(os.environ.get("TF_CONFIG", "{}"))
@@ -87,7 +91,7 @@ tf.logging.info("Input Shape: {}".format(input_shape))
 tf.logging.info("The Number of Actions: {}".format(n_actions))
 
 # Create replay memory
-replay_memory = repmem.ReplayMemory(memory_size=2000)
+replay_memory = repmem.ReplayMemory(memory_size=REPLAY_MEMORY_SIZE)
 
 # Build graph
 with tf.Graph().as_default() as graph:
@@ -118,7 +122,7 @@ with tf.Graph().as_default() as graph:
         # stop_grace_period_secs=120,
     ) as mon_sess:
         while True:
-            random_action_prob = max(0.999 ** mon_sess.run(global_step), 0.05)
+            random_action_prob = max(RANDOM_ACTION_DECAY**mon_sess.run(global_step), 0.05)
             # Play a new game
             previous_observation = env.reset()
             done = False

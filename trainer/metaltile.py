@@ -48,17 +48,19 @@ class MetalTileEnv(Env):
             raise ValueError
         # TODO: update enemy position
         # Game clear
-        if np.all(self.player_position == self.enemy_position):
+        if self.player_position[0] == self.enemy_position[0] and self.player_position[1] == self.enemy_position[1]:
             self.terminal = True
             reward = 1.
         # Time over
         elif self.iter >= 5 * self.field_size:
             self.terminal = True
             reward = self.compute_reward()
+            # reward = 0.
         # Give reward for distance
         else:
             self.terminal = False
             reward = self.compute_reward()
+            # reward = 0
         self.iter += 1
         info = None
         return self.state(), reward, self.terminal, info
@@ -76,9 +78,12 @@ class MetalTileEnv(Env):
         print(field_str)
 
     def compute_reward(self):
-        dist = np.linalg.norm(self.player_position - self.enemy_position)
-        max_dist = np.linalg.norm([self.field_size, self.field_size])
-        reward = - dist / max_dist / 100 / self.field_size
+        # dist = np.linalg.norm(self.player_position - self.enemy_position)
+        # max_dist = np.linalg.norm([self.field_size, self.field_size])
+        # reward = - dist / max_dist / 0.1 / self.field_size
+        x_diff = np.abs(self.player_position[0] - self.enemy_position[0])
+        y_diff = np.abs(self.player_position[1] - self.enemy_position[1])
+        reward = -(x_diff + y_diff) / (self.field_size * 2. * 1000.)
         return reward
 
     def state(self):
@@ -96,7 +101,7 @@ if __name__ == "__main__":
     n_action = 5
     observation = env.reset()
     for _ in range(1000):
-        # env.render()
+        env.render()
         action = np.random.randint(n_action)
         observation, reward, done, info = env.step(action)
         print(reward)

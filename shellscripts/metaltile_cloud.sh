@@ -14,8 +14,8 @@ gcloud ml-engine jobs submit training ${JOB_NAME} \
   -- \
   --output_path="${TRAIN_PATH}/outputs" \
   --n_episodes=10000 \
-  --learning_rate=0.001 \
-  --n_updates=10 \
-  --batch_size=50 \
+  --learning_rate=0.01 \
+  --n_updates=5 \
+  --batch_size=100 \
   --field_size=84 \
   --env_name=${ENV_NAME}
