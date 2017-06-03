@@ -9,7 +9,7 @@ class MetalTileEnv(Env):
 
     def __init__(self, field_size=84):
         self.action_space = spaces.Discrete(5)
-        self.observation_space = spaces.Box(-1, 1, field_size**2*3)
+        self.observation_space = spaces.Box(-1, 1, [field_size, field_size, 3])
         self.field_size = field_size
         self.iter = 0
         self.terminal = False
@@ -78,7 +78,7 @@ class MetalTileEnv(Env):
     def compute_reward(self):
         dist = np.linalg.norm(self.player_position - self.enemy_position)
         max_dist = np.linalg.norm([self.field_size, self.field_size])
-        reward = - dist / max_dist / 100
+        reward = - dist / max_dist / 100 / self.field_size
         return reward
 
     def state(self):
@@ -88,7 +88,8 @@ class MetalTileEnv(Env):
         # Set enemy position on second kernel
         s[self.enemy_position[0], self.enemy_position[1], 1] = 1
         # TODO: Set structures on third kernel
-        return s.flatten()
+        return s
+        # return s.flatten()
 
 if __name__ == "__main__":
     env = MetalTileEnv(field_size=4)

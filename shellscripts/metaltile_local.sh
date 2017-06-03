@@ -7,5 +7,5 @@ python -m trainer.task --output_path outputs/${ENV_NAME} \
                        --learning_rate 0.001 \
                        --n_updates 5 \
                        --batch_size 50 \
-                       --field_size 8 \
+                       --field_size 84 \
                        --env_name ${ENV_NAME}

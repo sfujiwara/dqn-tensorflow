@@ -138,17 +138,16 @@ with tf.Graph().as_default() as graph:
                 # Store the experience
                 replay_memory.store(previous_observation, action, reward, observation, done)
                 previous_observation = observation
-                # Update the policy
-                for _ in range(N_UPDATES):
-                    mini_batch = replay_memory.sample(size=BATCH_SIZE)
-                    train_loss = dqn_agent.update(
-                        mon_sess, mini_batch[0], mini_batch[1], mini_batch[2], mini_batch[3], mini_batch[4]
-                    )
+            # Update the policy
+            for _ in range(N_UPDATES):
+                mini_batch = replay_memory.sample(size=BATCH_SIZE)
+                train_loss = dqn_agent.update(
+                    mon_sess, mini_batch[0], mini_batch[1], mini_batch[2], mini_batch[3], mini_batch[4]
+                )
             tf.logging.info(
                 "Episode: {0} Total Reward: {1} Training Loss: {2} Random Action Probability: {3}".format(
                 mon_sess.run(global_step), total_reward, np.mean(train_loss), random_action_prob)
             )
-            env.reset()
             mon_sess.run(increment_global_step_op)
             # Only master write summary
             if tf_conf["task"]["type"] == "master":
