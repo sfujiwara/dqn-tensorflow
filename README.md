@@ -17,7 +17,7 @@ python -m trainer.task --output_path outputs/${ENV_NAME} \
 
 ```sh
 # Specify export directory for example:
-EXPORT_DIR="outputs/CartPole-v1/models/episode-4970"
+EXPORT_DIR="sample-models/CartPole-v1/models/episode-4970"
 
 # Specify the name of environment for example:
 ENV_NAME="CartPole-v1"

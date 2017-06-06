@@ -15,9 +15,9 @@ class DQN:
         self.n_actions = n_actions
         self.gamma = 0.95
         # Build graph
-        self.x_ph = tf.placeholder(tf.float32, shape=[None]+list(input_shape), name="x_placeholder")
-        self.y_ph = tf.placeholder(tf.float32, shape=[None], name="y_placeholder")
-        self.a_ph = tf.placeholder(tf.int64, shape=[None], name="a_placeholder")
+        self.x_ph = tf.placeholder(tf.float32, shape=[None]+list(input_shape), name="x_ph")
+        self.y_ph = tf.placeholder(tf.float32, shape=[None], name="y_ph")
+        self.a_ph = tf.placeholder(tf.int64, shape=[None], name="a_ph")
         self.q = self._inference(self.x_ph, self.n_actions)
         self.loss = self._build_loss(self.y_ph, self.q, self.a_ph)
         self.train_ops = self._build_optimizer(self.loss, learning_rate)
@@ -61,7 +61,8 @@ class DQN:
 
     @staticmethod
     def _build_optimizer(loss, learning_rate):
-        train_op = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
+        # train_op = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
+        train_op = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(loss)
         return train_op
 
     def update(self, sess, x_t, a_t, r_t, x_t_plus_1, terminal):
