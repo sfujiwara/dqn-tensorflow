@@ -10,14 +10,14 @@ gcloud ml-engine jobs submit training ${JOB_NAME} \
   --module-name=trainer.task \
   --staging-bucket=gs://${PROJECT_ID}-ml \
   --region=us-central1 \
-  --config=config.yaml \
+  --config=config-gpu.yaml \
   -- \
   --output_path="${TRAIN_PATH}/outputs" \
-  --n_episodes=20000 \
-  --learning_rate=0.002 \
-  --n_updates=5 \
+  --n_episodes=50000 \
+  --learning_rate=0.0001 \
+  --n_updates=50 \
   --batch_size=32 \
-  --field_size=84 \
+  --field_size=8 \
   --random_action_decay 0.9999 \
   --replay_memory_size 5000 \
   --env_name=${ENV_NAME}

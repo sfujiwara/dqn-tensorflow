@@ -29,10 +29,10 @@ class DQN:
         # input_rank = len(x_ph.get_shape()) == 2:
         with tf.variable_scope("hidden1"):
             x_flat = tf.reshape(x_ph, [-1, np.prod(x_ph.get_shape()[1:]).value])
-            hidden1 = tf.layers.dense(x_flat, 20, activation=tf.nn.relu)
+            hidden1 = tf.layers.dense(x_flat, 128, activation=tf.nn.relu)
             # hidden1 = tf.layers.dense(x_ph, 2048, activation=tf.nn.relu)
         with tf.variable_scope("hidden2"):
-            hidden2 = tf.layers.dense(hidden1, 20, activation=tf.nn.relu)
+            hidden2 = tf.layers.dense(hidden1, 128, activation=tf.nn.relu)
             # hidden2 = tf.layers.dense(hidden1, 1024, activation=tf.nn.relu)
         with tf.variable_scope("output"):
             outputs = tf.layers.dense(hidden2, n_actions, activation=None)

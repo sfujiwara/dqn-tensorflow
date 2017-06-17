@@ -3,8 +3,8 @@
 ENV_NAME="MetalTile-v1"
 
 python -m trainer.task --output_path outputs/${ENV_NAME} \
-                       --n_episodes 15 \
-                       --learning_rate 0.005 \
+                       --n_episodes 30000 \
+                       --learning_rate 0.001 \
                        --n_updates 10 \
                        --batch_size 32 \
                        --field_size 8 \
