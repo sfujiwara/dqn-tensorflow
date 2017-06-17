@@ -84,6 +84,7 @@ if ENV_NAME == "MetalTile-v1":
 else:
     # Use OpenAI Gym environment
     env = gym.make(ENV_NAME)
+    env = gym.wrappers.Monitor(env=env, directory=os.path.join("outputs", ENV_NAME, "monitor"))
 input_shape = env.observation_space.shape
 n_actions = env.action_space.n
 

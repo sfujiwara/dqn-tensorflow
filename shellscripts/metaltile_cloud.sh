@@ -13,9 +13,11 @@ gcloud ml-engine jobs submit training ${JOB_NAME} \
   --config=config.yaml \
   -- \
   --output_path="${TRAIN_PATH}/outputs" \
-  --n_episodes=10000 \
-  --learning_rate=0.01 \
+  --n_episodes=20000 \
+  --learning_rate=0.002 \
   --n_updates=5 \
-  --batch_size=100 \
+  --batch_size=32 \
   --field_size=84 \
+  --random_action_decay 0.9999 \
+  --replay_memory_size 5000 \
   --env_name=${ENV_NAME}
