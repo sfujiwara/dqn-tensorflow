@@ -26,29 +26,29 @@ class DQN:
     @staticmethod
     def _inference(x_ph, n_actions):
         # Use fully connected neural net
-        if len(x_ph.get_shape()) == 2:
-            with tf.variable_scope("hidden1"):
-                hidden1 = tf.layers.dense(x_ph, 20, activation=tf.nn.relu)
-                # hidden1 = tf.layers.dense(x_ph, 2048, activation=tf.nn.relu)
-            with tf.variable_scope("hidden2"):
-                hidden2 = tf.layers.dense(hidden1, 20, activation=tf.nn.relu)
-                # hidden2 = tf.layers.dense(hidden1, 1024, activation=tf.nn.relu)
-            with tf.variable_scope("output"):
-                outputs = tf.layers.dense(hidden2, n_actions, activation=None)
-            return outputs
+        # input_rank = len(x_ph.get_shape()) == 2:
+        with tf.variable_scope("hidden1"):
+            x_flat = tf.reshape(x_ph, [-1, np.prod(x_ph.get_shape()[1:]).value])
+            hidden1 = tf.layers.dense(x_flat, 20, activation=tf.nn.relu)
+            # hidden1 = tf.layers.dense(x_ph, 2048, activation=tf.nn.relu)
+        with tf.variable_scope("hidden2"):
+            hidden2 = tf.layers.dense(hidden1, 20, activation=tf.nn.relu)
+            # hidden2 = tf.layers.dense(hidden1, 1024, activation=tf.nn.relu)
+        with tf.variable_scope("output"):
+            outputs = tf.layers.dense(hidden2, n_actions, activation=None)
+        return outputs
         # Use convolutional neural net
-        else:
-            with tf.variable_scope("conv1"):
-                conv1 = tf.layers.conv2d(inputs=x_ph, filters=16, kernel_size=[8, 8], strides=4, activation=tf.nn.relu)
-            with tf.variable_scope("conv2"):
-                conv2 = tf.layers.conv2d(inputs=conv1, filters=32, kernel_size=[4, 4], strides=2, activation=tf.nn.relu)
-            with tf.name_scope("flatten"):
-                conv2_flat = tf.reshape(conv2, [-1, np.prod(conv2.get_shape()[1:]).value])
-            with tf.variable_scope("fc"):
-                fc = tf.layers.dense(inputs=conv2_flat, units=256, activation=tf.nn.relu)
-            with tf.variable_scope("output"):
-                outputs = tf.layers.dense(inputs=fc, units=n_actions)
-            return outputs
+        # with tf.variable_scope("conv1"):
+        #     conv1 = tf.layers.conv2d(inputs=x_ph, filters=16, kernel_size=[8, 8], strides=4, activation=tf.nn.relu)
+        # with tf.variable_scope("conv2"):
+        #     conv2 = tf.layers.conv2d(inputs=conv1, filters=32, kernel_size=[4, 4], strides=2, activation=tf.nn.relu)
+        # with tf.name_scope("flatten"):
+        #     conv2_flat = tf.reshape(conv2, [-1, np.prod(conv2.get_shape()[1:]).value])
+        # with tf.variable_scope("fc"):
+        #     fc = tf.layers.dense(inputs=conv2_flat, units=256, activation=tf.nn.relu)
+        # with tf.variable_scope("output"):
+        #     outputs = tf.layers.dense(inputs=fc, units=n_actions)
+        # return outputs
 
     @staticmethod
     def _build_loss(y_t_ph, q_t, a_ph):
