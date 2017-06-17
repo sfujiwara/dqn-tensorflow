@@ -88,7 +88,7 @@ curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${ACC
 ## DQN Server
 
 ```
-python dqn_server.py
+python dqn_server.py --model ${PATH_TO_SAVED_MODEL}
 ```
 
 ```

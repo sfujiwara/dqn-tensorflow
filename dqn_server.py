@@ -1,34 +1,44 @@
 # -*- coding: utf-8 -*-
 
 # Default modules
-import json
-import os
+import argparse
 
 # Additional modules
 import flask
 import tensorflow as tf
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--model", type=str)
+args, unknown_args = parser.parse_known_args()
+
 app = flask.Flask(__name__)
 
 FIELD_SIZE = 8
-MODEL_DIR = "gs://cpb100demo1-ml/dqn/dqn20161202170846/model"
+MODEL_DIR = args.model
 
-with tf.Graph().as_default() as graph:
-    saver = tf.train.import_meta_graph(os.path.join(MODEL_DIR, "export.meta"))
-    inputs = json.loads(tf.get_collection("inputs")[0])
-    outputs = json.loads(tf.get_collection("outputs")[0])
-    state = graph.get_tensor_by_name(inputs["state"])
-    q = graph.get_tensor_by_name(outputs["q"])
-    # Create session
+with tf.Graph().as_default() as g:
     sess = tf.Session()
-    saver.restore(sess, os.path.join(MODEL_DIR, "export"))
+    meta_graph = tf.saved_model.loader.load(
+        sess=sess,
+        tags=[tf.saved_model.tag_constants.SERVING],
+        export_dir=MODEL_DIR
+    )
+    model_signature = meta_graph.signature_def[tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+    input_signature = model_signature.inputs
+    output_signature = model_signature.outputs
+    # Get names of input and output tensors
+    input_tensor_name = input_signature["state"].name
+    output_tensor_name = output_signature["q"].name
+    # Get input and output tensors
+    x_ph = sess.graph.get_tensor_by_name(input_tensor_name)
+    q = sess.graph.get_tensor_by_name(output_tensor_name)
 
 
 @app.route('/', methods=["GET", "POST"])
 def main():
     content = flask.request.get_json(force=True)
-    result = sess.run(q, feed_dict={state: [content["instances"][0]["state"]]}).tolist()
+    result = sess.run(q, feed_dict={x_ph: [content["instances"][0]["state"]]}).tolist()
     return flask.jsonify({"predictions": [{"q": result[0], "key": None}]})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
