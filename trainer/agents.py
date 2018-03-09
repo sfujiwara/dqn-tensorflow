@@ -7,42 +7,36 @@ import os
 import numpy as np
 import tensorflow as tf
 
+from . import repmem
+
 
 class DQN:
 
-    def __init__(self, input_shape, n_actions, learning_rate=1e-2):
+    def __init__(
+            self,
+            input_shape,
+            n_actions,
+            q_fn,
+            learning_rate=1e-2,
+    ):
         self.learning_rate = learning_rate
         self.n_actions = n_actions
         self.gamma = 0.95
-        # Build graph
-        # self.x_ph = tf.placeholder(tf.float32, shape=[None]+list(input_shape), name="x_ph")
-        self.x_ph = tf.placeholder(tf.float32, shape=[None, 84, 84, 4], name="x_ph")
+        self.input_shape = input_shape
+        self.q_fn = q_fn
+        # Reference to graph is assigned after running `build_graph` method
+        self.x_ph, self.y_ph, self.a_ph = None, None, None
+        self.q, self.loss, self.train_ops = None, None, None
+
+    def build_graph(self):
+        # Create placeholders
+        self.x_ph = tf.placeholder(tf.float32, shape=[None]+list(self.input_shape), name="x_ph")
         self.y_ph = tf.placeholder(tf.float32, shape=[None], name="y_ph")
         self.a_ph = tf.placeholder(tf.int64, shape=[None], name="a_ph")
-        self.q = self._inference(self.x_ph, self.n_actions)
+        # Build q network
+        self.q = self.q_fn(self.x_ph, self.n_actions)
         self.loss = self._build_loss(self.y_ph, self.q, self.a_ph)
-        self.train_ops = self._build_optimizer(self.loss, learning_rate)
-        self.merged = tf.summary.merge_all()
-
-    @staticmethod
-    def _inference(x_ph, n_actions):
-        # Use fully connected neural net
-        # input_rank = len(x_ph.get_shape()) == 2:
-        # with tf.variable_scope("hidden1"):
-        #     x_flat = tf.reshape(x_ph, [-1, np.prod(x_ph.get_shape()[1:]).value])
-        #     hidden1 = tf.layers.dense(x_flat, 128, activation=tf.nn.relu)
-        # with tf.variable_scope("hidden2"):
-        #     hidden2 = tf.layers.dense(hidden1, 128, activation=tf.nn.relu)
-        # with tf.variable_scope("output"):
-        #     outputs = tf.layers.dense(hidden2, n_actions, activation=None)
-        # return outputs
-        # Use convolutional neural net
-        conv1 = tf.layers.conv2d(inputs=x_ph, filters=16, kernel_size=[8, 8], strides=4, activation=tf.nn.relu)
-        conv2 = tf.layers.conv2d(inputs=conv1, filters=32, kernel_size=[4, 4], strides=2, activation=tf.nn.relu)
-        conv2_flat = tf.layers.flatten(conv2)
-        fc = tf.layers.dense(inputs=conv2_flat, units=256, activation=tf.nn.relu)
-        outputs = tf.layers.dense(inputs=fc, units=n_actions)
-        return outputs
+        self.train_ops = self._build_optimizer(self.loss, self.learning_rate)
 
     @staticmethod
     def _build_loss(y_t_ph, q_t, a_ph):
@@ -70,9 +64,6 @@ class DQN:
 
     def act(self, sess, x_t):
         return sess.run(self.q, feed_dict={self.x_ph: x_t})
-
-    def write_summary(self, sess):
-        return sess.run(self.merged)
 
     def save_model(self, dir):
         latest_checkpoint = tf.train.latest_checkpoint(os.path.join(dir, "checkpoints"))
@@ -110,3 +101,54 @@ class DQN:
                     assets_collection=tf.get_collection(tf.GraphKeys.ASSET_FILEPATHS)
                 )
                 builder.save()
+
+
+def train_and_play_game(
+        agent,
+        env,
+        random_action_decay,
+        max_episodes,
+        replay_memory_size,
+        batch_size,
+        n_updates_on_episode,
+):
+    replay_memory = repmem.ReplayMemory(memory_size=replay_memory_size)
+    with tf.Graph().as_default() as g:
+        agent.build_graph()
+        global_step = tf.Variable(0, trainable=False, name="global_step")
+        increment_global_step_op = global_step.assign_add(1)
+        with tf.train.MonitoredTrainingSession() as mon_sess:
+            # Training loop
+            while mon_sess.run(global_step) < max_episodes:
+                random_action_prob = max(random_action_decay**mon_sess.run(global_step), 0.1)
+                # Play a new game
+                previous_observation = env.reset()
+                done = False
+                total_reward = 0
+                while not done:
+                    # Act at random with a fixed probability
+                    if np.random.rand() <= random_action_prob:
+                        action = np.random.randint(agent.n_actions)
+                    # Act following the policy on the other games
+                    else:
+                        q = agent.act(mon_sess, np.array([previous_observation]))
+                        action = q.argmax()
+                    # Receive the results from the game simulator
+                    observation, reward, done, info = env.step(action)
+                    # reward = reward if not done else -10
+                    total_reward += reward
+                    # Store the experience
+                    replay_memory.store(previous_observation, action, reward, observation, done)
+                    previous_observation = observation
+
+                # Update the policy
+                for _ in range(n_updates_on_episode):
+                    mini_batch = replay_memory.sample(size=batch_size)
+                    train_loss = agent.update(
+                        mon_sess, mini_batch[0], mini_batch[1], mini_batch[2], mini_batch[3], mini_batch[4]
+                    )
+                tf.logging.info(
+                    "Episode: {0} Total Reward: {1} Training Loss: {2} Random Action Probability: {3}".format(
+                        mon_sess.run(global_step), total_reward, np.mean(train_loss), random_action_prob)
+                )
+                mon_sess.run(increment_global_step_op)

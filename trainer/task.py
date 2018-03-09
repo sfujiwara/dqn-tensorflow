@@ -11,7 +11,7 @@ import gym
 
 from trainer import dqn, repmem
 from trainer import metaltile
-
+from trainer import breakout_env
 
 # Set log level
 tf.logging.set_verbosity(tf.logging.DEBUG)
@@ -82,9 +82,11 @@ if ENV_NAME == "MetalTile-v1":
     # Use my environment
     env = metaltile.MetalTileEnv(field_size=FIELD_SIZE)
 else:
+    # Use breakout
+    env = breakout_env.BreakoutEnv()
     # Use OpenAI Gym environment
-    env = gym.make(ENV_NAME)
-    env = gym.wrappers.Monitor(env=env, directory=os.path.join("outputs", ENV_NAME, "monitor"))
+    # env = gym.make(ENV_NAME)
+    # env = gym.wrappers.Monitor(env=env, directory=os.path.join("outputs", ENV_NAME, "monitor"))
 input_shape = env.observation_space.shape
 n_actions = env.action_space.n
 

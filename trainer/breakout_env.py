@@ -12,7 +12,7 @@ class BreakoutEnv(Env):
     def __init__(self):
         self.breakout_v0_env = gym.make("Breakout-v0")
         self.action_space = self.breakout_v0_env.action_space
-        self.observation_space = None
+        self.observation_space = spaces.Box(low=0, high=1, shape=(84, 84, 4))
         self.recent_observations = collections.deque(maxlen=4)
 
     def reset(self):
