@@ -1,4 +1,5 @@
 import tensorflow as tf
+
 from . import breakout_env
 from . import agents
 
@@ -24,11 +25,11 @@ def main():
     agents.train_and_play_game(
         agent=agent,
         env=env,
-        random_action_decay=0.995,
-        max_episodes=1000,
+        random_action_decay=0.9995,
+        max_episodes=10000,
         replay_memory_size=2000,
         batch_size=32,
-        n_updates_on_episode=5,
+        n_updates_on_episode=10,
     )
 
 

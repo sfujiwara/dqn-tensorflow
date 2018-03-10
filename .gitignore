@@ -6,3 +6,6 @@ log
 run_cloud.sh
 run_local.sh
 sandbox*
+build
+dist
+*.egg-info

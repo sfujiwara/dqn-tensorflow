@@ -1,7 +1,6 @@
 import collections
 import gym
 from gym import Env, spaces
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy.misc import imresize
 from skimage.color import rgb2gray
@@ -35,6 +34,8 @@ class BreakoutEnv(Env):
 
 
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+
     env = BreakoutEnv()
     observation = env.reset()
     for i in range(10):
