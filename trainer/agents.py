@@ -48,7 +48,12 @@ class DQN:
 
     @staticmethod
     def _build_optimizer(loss, learning_rate):
-        train_op = tf.train.RMSPropOptimizer(learning_rate=learning_rate).minimize(loss)
+        train_op = tf.train.RMSPropOptimizer(
+            learning_rate=learning_rate,
+            decay=0.9,
+            momentum=0.95
+        ).minimize(loss)
+        # train_op = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
         return train_op
 
     def update(self, sess, x_t, a_t, r_t, x_t_plus_1, terminal):
@@ -113,6 +118,7 @@ def train_and_play_game(
         n_updates_on_episode,
 ):
     replay_memory = repmem.ReplayMemory(memory_size=replay_memory_size)
+    total_reward_list = []
     with tf.Graph().as_default() as g:
         agent.build_graph()
         global_step = tf.Variable(0, trainable=False, name="global_step")
@@ -120,7 +126,7 @@ def train_and_play_game(
         with tf.train.MonitoredTrainingSession() as mon_sess:
             # Training loop
             while mon_sess.run(global_step) < max_episodes:
-                random_action_prob = max(random_action_decay**mon_sess.run(global_step), 0.1)
+                random_action_prob = max(random_action_decay**mon_sess.run(global_step), 0.05)
                 # Play a new game
                 previous_observation = env.reset()
                 done = False
@@ -140,6 +146,7 @@ def train_and_play_game(
                     # Store the experience
                     replay_memory.store(previous_observation, action, reward, observation, done)
                     previous_observation = observation
+                total_reward_list.append(total_reward)
 
                 # Update the policy
                 for _ in range(n_updates_on_episode):
@@ -148,7 +155,7 @@ def train_and_play_game(
                         mon_sess, mini_batch[0], mini_batch[1], mini_batch[2], mini_batch[3], mini_batch[4]
                     )
                 tf.logging.info(
-                    "Episode: {0} Total Reward: {1} Training Loss: {2} Random Action Probability: {3}".format(
-                        mon_sess.run(global_step), total_reward, np.mean(train_loss), random_action_prob)
+                    "Episode: {0} Average Reward: {1} Training Loss: {2} Random Action Probability: {3}".format(
+                        mon_sess.run(global_step), np.mean(total_reward_list[-50:]), np.mean(train_loss), random_action_prob)
                 )
                 mon_sess.run(increment_global_step_op)
