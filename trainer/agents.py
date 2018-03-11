@@ -116,6 +116,7 @@ def train_and_play_game(
         replay_memory_size,
         batch_size,
         n_updates_on_episode,
+        update_interval=1,
 ):
     replay_memory = repmem.ReplayMemory(memory_size=replay_memory_size)
     total_reward_list = []
@@ -154,7 +155,7 @@ def train_and_play_game(
                     train_loss = agent.update(
                         mon_sess, mini_batch[0], mini_batch[1], mini_batch[2], mini_batch[3], mini_batch[4]
                     )
-                tf.logging.info(
+                print(
                     "Episode: {0} Average Reward: {1} Training Loss: {2} Random Action Probability: {3}".format(
                         mon_sess.run(global_step), np.mean(total_reward_list[-50:]), np.mean(train_loss), random_action_prob)
                 )

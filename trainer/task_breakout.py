@@ -28,7 +28,7 @@ def main():
         env=env,
         random_action_decay=0.999,
         max_episodes=15000,
-        replay_memory_size=200000,
+        replay_memory_size=250000,
         batch_size=32,
         n_updates_on_episode=200,
     )
