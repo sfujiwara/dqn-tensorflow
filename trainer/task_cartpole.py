@@ -17,14 +17,14 @@ def main():
         q_fn=q_fn,
         input_shape=env.observation_space.shape,
         n_actions=env.action_space.n,
-        learning_rate=0.00025
+        learning_rate=0.025
     )
     agents.train_and_play_game(
         agent=agent,
         env=env,
         random_action_decay=0.99,
-        max_episodes=2000,
-        replay_memory_size=10000,
+        max_episodes=1000,
+        replay_memory_size=200000,
         update_frequency=1,
         action_repeat=1,
         batch_size=32,
