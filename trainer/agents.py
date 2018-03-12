@@ -18,10 +18,11 @@ class DQN:
             n_actions,
             q_fn,
             learning_rate=1e-2,
+            discount_factor=0.99
     ):
         self.learning_rate = learning_rate
         self.n_actions = n_actions
-        self.gamma = 0.95
+        self.gamma = discount_factor
         self.input_shape = input_shape
         self.q_fn = q_fn
         # Reference to graph is assigned after running `build_graph` method
@@ -48,12 +49,13 @@ class DQN:
 
     @staticmethod
     def _build_optimizer(loss, learning_rate):
+        global_step = tf.train.get_or_create_global_step()
         train_op = tf.train.RMSPropOptimizer(
             learning_rate=learning_rate,
             decay=0.9,
-            momentum=0.95
-        ).minimize(loss)
-        # train_op = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
+            momentum=0.95,
+        ).minimize(loss, global_step=global_step)
+        # train_op = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss, global_step=global_step)
         return train_op
 
     def update(self, sess, x_t, a_t, r_t, x_t_plus_1, terminal):
@@ -114,49 +116,57 @@ def train_and_play_game(
         random_action_decay,
         max_episodes,
         replay_memory_size,
-        batch_size,
-        n_updates_on_episode,
-        update_interval=1,
+        batch_size=32,
+        update_frequency=4,
+        log_frequency=5,
+        action_repeat=4,
 ):
     replay_memory = repmem.ReplayMemory(memory_size=replay_memory_size)
     total_reward_list = []
     with tf.Graph().as_default() as g:
         agent.build_graph()
-        global_step = tf.Variable(0, trainable=False, name="global_step")
-        increment_global_step_op = global_step.assign_add(1)
+        episode_count, step_count, action_count, frame_count = 0, 0, 0, 0
         with tf.train.MonitoredTrainingSession() as mon_sess:
             # Training loop
-            while mon_sess.run(global_step) < max_episodes:
-                random_action_prob = max(random_action_decay**mon_sess.run(global_step), 0.05)
+            while episode_count < max_episodes:
+                random_action_prob = max(random_action_decay**episode_count, 0.05)
                 # Play a new game
                 previous_observation = env.reset()
                 done = False
                 total_reward = 0
+                # Initial action
+                action = np.random.randint(agent.n_actions)
                 while not done:
-                    # Act at random with a fixed probability
-                    if np.random.rand() <= random_action_prob:
-                        action = np.random.randint(agent.n_actions)
-                    # Act following the policy on the other games
-                    else:
-                        q = agent.act(mon_sess, np.array([previous_observation]))
-                        action = q.argmax()
+                    # Frame skip
+                    if frame_count % action_repeat == 0:
+                        # Act at random with a fixed probability
+                        if np.random.rand() <= random_action_prob:
+                            action = np.random.randint(agent.n_actions)
+                        # Act following the policy on the other games
+                        else:
+                            q = agent.act(mon_sess, np.array([previous_observation]))
+                            action = q.argmax()
+                        action_count += 1
                     # Receive the results from the game simulator
                     observation, reward, done, info = env.step(action)
-                    # reward = reward if not done else -10
                     total_reward += reward
                     # Store the experience
-                    replay_memory.store(previous_observation, action, reward, observation, done)
+                    if frame_count % action_repeat == 0:
+                        replay_memory.store(previous_observation, action, reward, observation, done)
                     previous_observation = observation
+                    # Update q network every update_interval
+                    if action_count % update_frequency == 0:
+                        mini_batch = replay_memory.sample(size=batch_size)
+                        train_loss = agent.update(
+                            mon_sess, mini_batch[0], mini_batch[1], mini_batch[2], mini_batch[3], mini_batch[4]
+                        )
+                        step_count += 1
+                    frame_count += 1
+                episode_count += 1
                 total_reward_list.append(total_reward)
-
-                # Update the policy
-                for _ in range(n_updates_on_episode):
-                    mini_batch = replay_memory.sample(size=batch_size)
-                    train_loss = agent.update(
-                        mon_sess, mini_batch[0], mini_batch[1], mini_batch[2], mini_batch[3], mini_batch[4]
+                # Show log every log_interval
+                if episode_count % log_frequency == 0:
+                    print(
+                        "Episode: {0} Average Reward: {1} Training Loss: {2} Random Action Probability: {3}".format(
+                            episode_count, np.mean(total_reward_list[-50:]), np.mean(train_loss), random_action_prob)
                     )
-                print(
-                    "Episode: {0} Average Reward: {1} Training Loss: {2} Random Action Probability: {3}".format(
-                        mon_sess.run(global_step), np.mean(total_reward_list[-50:]), np.mean(train_loss), random_action_prob)
-                )
-                mon_sess.run(increment_global_step_op)
