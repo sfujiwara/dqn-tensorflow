@@ -8,14 +8,15 @@ from skimage.color import rgb2gray
 
 class BreakoutEnv(Env):
     """
-    Note:
-        - If agent act at random, it takes about 200~300 frames per one episode
+    Note
+    ----
+    If agent act at random, it takes about 200~300 frames per one episode
     """
 
     def __init__(self):
         self.breakout_v0_env = gym.make("Breakout-v0")
         self.action_space = self.breakout_v0_env.action_space
-        self.observation_space = spaces.Box(low=0, high=1, shape=(84, 84, 4))
+        self.observation_space = spaces.Box(low=0, high=1, shape=(84, 84, 4), dtype=np.float)
         self.recent_observations = collections.deque(maxlen=4)
 
     def reset(self):
@@ -42,7 +43,7 @@ if __name__ == "__main__":
 
     env = BreakoutEnv()
     observation = env.reset()
-    for i in range(1000):
+    for i in range(10):
         # env.render()
         action = env.action_space.sample()
         observation, reward, done, info = env.step(action)
@@ -50,5 +51,6 @@ if __name__ == "__main__":
             break
 
     img = np.hstack([observation[:, :, 0], observation[:, :, 1], observation[:, :, 2], observation[:, :, 3]])
+    img = np.max(observation, axis=2)
     plt.imshow(img, cmap="gray")
     plt.show()
