@@ -6,7 +6,7 @@ INSTANCE_NAME="dqn-breakout-`date '+%Y%m%d%H%M%S'`"
 # Create Compute Engine instance
 gcloud beta compute --project ${PROJECT_ID} instances create ${INSTANCE_NAME} \
   --zone "us-central1-b" \
-  --machine-type "n1-standard-1" \
+  --machine-type "n1-highmem-8" \
   --subnet "default" \
   --maintenance-policy "MIGRATE" \
   --service-account "701154693276-compute@developer.gserviceaccount.com" \

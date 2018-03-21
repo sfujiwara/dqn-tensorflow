@@ -40,6 +40,6 @@ pip install gym[atari]
 pip install ipython
 pip install tensorflow
 pip install scipy
-pip isntall scikit-image
+pip install scikit-image
 pip install tqdm
 pip install git+https://github.com/sfujiwara/gjhandler.git

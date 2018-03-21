@@ -1,9 +1,3 @@
-# TODO: implement target q network
-
-# Default modules
-import os
-
-# Additional modules
 import numpy as np
 import tensorflow as tf
 
@@ -17,7 +11,7 @@ class DQN:
             input_shape,
             n_actions,
             q_fn,
-            learning_rate=1e-2,
+            learning_rate,
             discount_factor=0.99
     ):
         """
@@ -43,7 +37,7 @@ class DQN:
         self.gamma = discount_factor
         self.input_shape = input_shape
         self.q_fn = q_fn
-        # Reference to graph is assigned after running `build_graph` method
+        # References to graph nodes are assigned after running `build_graph` method
         self.x_ph, self.y_ph, self.a_ph = None, None, None
         self.q, self.loss, self.train_ops = None, None, None
         self.target_x_ph, self.target_q = None, None
@@ -74,13 +68,12 @@ class DQN:
             a_t_one_hot = tf.one_hot(a_ph, q_t.get_shape()[1].value)
             q_t_acted = tf.reduce_sum(q_t * a_t_one_hot, reduction_indices=1)
             loss = tf.losses.mean_squared_error(labels=y_t_ph, predictions=q_t_acted)
-            # loss = tf.losses.huber_loss(labels=y_t_ph, predictions=q_t_acted, delta=100, reduction=tf.losses.Reduction.MEAN)
         return loss
 
     @staticmethod
     def _build_optimizer(loss, learning_rate):
         global_step = tf.train.get_or_create_global_step()
-        optim = tf.train.RMSPropOptimizer(learning_rate=learning_rate, decay=0.9, momentum=0.95)
+        optim = tf.train.RMSPropOptimizer(learning_rate=learning_rate, momentum=0.95, epsilon=1e-2)
         train_op = optim.minimize(loss, global_step=global_step)
         return train_op
 
@@ -100,43 +93,6 @@ class DQN:
     def update_target_q_network(self, sess):
         sess.run(self.assign_ops)
 
-    def save_model(self, dir):
-        latest_checkpoint = tf.train.latest_checkpoint(os.path.join(dir, "checkpoints"))
-        model_dir = os.path.join(dir, "models", "episode-{}".format(latest_checkpoint.split("-")[-1]))
-        # Save model for deployment on ML Engine
-        with tf.Graph().as_default():
-            input_key = tf.placeholder(tf.int64, [None, ], name="key")
-            output_key = tf.identity(input_key)
-            x_ph = tf.placeholder(tf.float32, shape=self.x_ph.get_shape(), name="x_ph")
-            q = self._inference(x_ph, self.n_actions)
-            saver = tf.train.Saver()
-            input_signatures = {
-                "key": tf.saved_model.utils.build_tensor_info(input_key),
-                "state": tf.saved_model.utils.build_tensor_info(x_ph)
-            }
-            output_signatures = {
-                "key": tf.saved_model.utils.build_tensor_info(output_key),
-                "q": tf.saved_model.utils.build_tensor_info(q)
-            }
-            predict_signature_def = tf.saved_model.signature_def_utils.build_signature_def(
-                input_signatures,
-                output_signatures,
-                tf.saved_model.signature_constants.PREDICT_METHOD_NAME
-            )
-            builder = tf.saved_model.builder.SavedModelBuilder(model_dir)
-            with tf.Session() as sess:
-                # Restore variables from latest checkpoint
-                saver.restore(sess, latest_checkpoint)
-                builder.add_meta_graph_and_variables(
-                    sess=sess,
-                    tags=[tf.saved_model.tag_constants.SERVING],
-                    signature_def_map={
-                        tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: predict_signature_def
-                    },
-                    assets_collection=tf.get_collection(tf.GraphKeys.ASSET_FILEPATHS)
-                )
-                builder.save()
-
 
 def train_and_play_game(
         agent,
@@ -144,11 +100,13 @@ def train_and_play_game(
         random_action_decay,
         max_episodes,
         replay_memory_size,
-        batch_size=32,
-        update_frequency=4,
-        target_sync_frequency=1000,
+        batch_size,
+        update_frequency,
+        target_sync_frequency,
+        final_exploration_frame,
         log_frequency=5,
         action_repeat=4,
+        max_no_op=30,
         checkpoint_dir=None,
 ):
     replay_memory = repmem.ReplayMemory(memory_size=replay_memory_size)
@@ -158,11 +116,12 @@ def train_and_play_game(
         episode_count = step_count = action_count = frame_count = 0
         with tf.train.MonitoredTrainingSession(
             save_summaries_steps=100,
-            checkpoint_dir=checkpoint_dir
+            checkpoint_dir=checkpoint_dir,
         ) as mon_sess:
             # Training loop
             while episode_count < max_episodes:
-                random_action_prob = max(random_action_decay**episode_count, 0.05)
+                # random_action_prob = max(random_action_decay**episode_count, 0.05)
+                random_action_prob = max(1 - float(frame_count)/final_exploration_frame*0.95, 0.05)
                 # Play a new game
                 previous_observation = env.reset()
                 done = False
@@ -170,9 +129,11 @@ def train_and_play_game(
                 # Initial action
                 action = np.random.randint(agent.n_actions)
                 while not done:
+                    # Act at random in first some frames
+                    # for _ in range(np.random.randint(1, max_no_op)):
+                    #     previous_observation, _, _, _ = env.step(env.action_space.sample())
                     # print(episode_count, step_count, action_count, frame_count)
                     if frame_count % target_sync_frequency == 0:
-                        # tf.logging.info("update target q network")
                         agent.update_target_q_network(mon_sess)
                     # Frame skip
                     if frame_count % action_repeat == 0:
@@ -183,6 +144,7 @@ def train_and_play_game(
                         else:
                             q = agent.act(mon_sess, np.array([previous_observation]))
                             action = q.argmax()
+                            # print(q)
                         action_count += 1
                     # Receive the results from the game simulator
                     observation, reward, done, info = env.step(action)
@@ -203,7 +165,11 @@ def train_and_play_game(
                 total_reward_list.append(total_reward)
                 # Show log every log_interval
                 if episode_count % log_frequency == 0:
+                    print("Episode: {} Frame: {} Test: {}".format(episode_count, frame_count, len(total_reward_list)))
                     print(
-                        "Episode: {0} Average Reward: {1} Training Loss: {2} Random Action Probability: {3}".format(
-                            episode_count, np.mean(total_reward_list[-50:]), np.mean(train_loss), random_action_prob)
+                        "Average Reward: {} Training Loss: {} Epsilon: {}".format(
+                            np.mean(total_reward_list[-50:]),
+                            np.mean(train_loss),
+                            random_action_prob
+                        )
                     )
