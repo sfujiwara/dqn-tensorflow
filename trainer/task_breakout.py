@@ -30,7 +30,7 @@ def main():
         q_fn=q_fn,
         input_shape=[84, 84, 4],
         n_actions=env.action_space.n,
-        learning_rate=0.025
+        learning_rate=0.00025
     )
     agents.train_and_play_game(
         agent=agent,
