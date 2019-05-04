@@ -9,12 +9,14 @@ parser.add_argument("--output_path", type=str)
 parser.add_argument("--learning_rate", type=float, default=0.00001)
 parser.add_argument("--replay_memory_size", type=int, default=200000)
 parser.add_argument("--update_frequency", type=int, default=4)
+parser.add_argument("--checkpoint_dir", type=str, default=None)
 
 args, unknown_args = parser.parse_known_args()
 
 REPLAY_MEMORY_SIZE = args.replay_memory_size
 LEARNING_RATE = args.learning_rate
 UPDATE_FREQUENCY = args.update_frequency
+CHECKPOINT_DIR = args.checkpoint_dir
 
 
 def q_fn(x, n_actions):
@@ -46,7 +48,7 @@ def main():
         final_exploration_frame=500000,
         action_repeat=1,
         max_no_op=0,
-        # checkpoint_dir="outputs/metaltile-v0",
+        checkpoint_dir=CHECKPOINT_DIR,
     )
 
 
