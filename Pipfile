@@ -1,0 +1,19 @@
+[[source]]
+name = "dqn"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[packages]
+gym = {extras = ["atari"],version = "*"}
+numpy = "*"
+pandas = "*"
+tensorflow = "*"
+
+[dev-packages]
+pytest = "*"
+
+[requires]
+python_version = "3.6"
+
+[scripts]
+train-cartpole = "python -m  trainer.task_cartpole"

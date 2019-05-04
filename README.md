@@ -1,13 +1,15 @@
 # Deep Q-Networks with TensorFlow
 
+## Setting Up
+
 ```bash
-pip install -r requirements.txt
+pipenv install
 ```
 
 ## Training on Local
 
 ```sh
-python -m trainer.task_cartpole
+pipenv run train-cartpole
 ```
 
 ## Play Game by Trained Model

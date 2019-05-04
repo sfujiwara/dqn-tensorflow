@@ -97,6 +97,7 @@ class MetalTileEnv(Env):
         # TODO: Set structures on third kernel
         return s
 
+
 if __name__ == "__main__":
     env = MetalTileEnv(field_size=4)
     n_action = 5

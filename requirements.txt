@@ -1,6 +1,0 @@
-gym[atari]
-numpy
-pillow
-scikit-image
-scipy
-tensorflow
