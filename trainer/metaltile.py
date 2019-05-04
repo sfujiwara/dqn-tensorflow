@@ -18,7 +18,7 @@ class MetalTileEnv(Env):
         self.enemy_position = None
         self.reset()
 
-    def _reset(self):
+    def reset(self):
         self.terminal = False
         self.iter = 0
         # Decide player position at random
@@ -28,7 +28,7 @@ class MetalTileEnv(Env):
         # TODO: Generate walls at random here
         return self.state()
 
-    def _step(self, action):
+    def step(self, action):
         # Update player position
         # Do nothing
         if action == 0:
@@ -67,7 +67,7 @@ class MetalTileEnv(Env):
         reward *= 50
         return self.state(), reward, self.terminal, info
 
-    def _render(self, mode="human", close=False):
+    def render(self, mode="human", close=False):
         field = np.array([["."]*self.field_size]*self.field_size)
         field[self.player_position[0], self.player_position[1]] = "P"
         field[self.enemy_position[0], self.enemy_position[1]] = "E"

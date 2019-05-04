@@ -1,5 +1,9 @@
 # Deep Q-Networks with TensorFlow
 
+## Requirements
+
+
+
 ## Setting Up
 
 ```bash
@@ -10,6 +14,10 @@ pipenv install
 
 ```sh
 pipenv run train-cartpole
+```
+
+```sh
+pipenv run train-metaltile
 ```
 
 ## Play Game by Trained Model
