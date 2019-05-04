@@ -41,6 +41,7 @@ def main():
         agent=agent,
         env=env,
         max_episodes=150000,
+        max_frames=5000000,
         replay_memory_size=REPLAY_MEMORY_SIZE,
         batch_size=32,
         update_frequency=UPDATE_FREQUENCY,

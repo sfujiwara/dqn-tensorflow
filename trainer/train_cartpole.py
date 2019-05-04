@@ -23,6 +23,7 @@ def main():
         agent=agent,
         env=env,
         max_episodes=1000,
+        max_frames=1000000,
         replay_memory_size=200000,
         update_frequency=1,
         target_sync_frequency=1000,

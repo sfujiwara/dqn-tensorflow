@@ -96,6 +96,7 @@ def train_and_play_game(
         agent,
         env,
         max_episodes,
+        max_frames,
         replay_memory_size,
         batch_size,
         update_frequency,
@@ -123,7 +124,7 @@ def train_and_play_game(
         ) as mon_sess:
 
             # Training loop
-            while episode_count < max_episodes:
+            while episode_count < max_episodes and frame_count < max_frames:
                 random_action_prob = max(1 - float(frame_count)/final_exploration_frame*0.95, 0.1)
                 # Play a new game
                 previous_observation = env.reset()
