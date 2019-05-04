@@ -74,6 +74,7 @@ class DQN:
     def _build_optimizer(loss, learning_rate):
         global_step = tf.train.get_or_create_global_step()
         optim = tf.train.RMSPropOptimizer(learning_rate=learning_rate, momentum=0.95, epsilon=1e-2)
+        # optim = tf.train.RMSPropOptimizer(learning_rate=learning_rate)
         train_op = optim.minimize(loss, global_step=global_step)
         return train_op
 
@@ -97,7 +98,6 @@ class DQN:
 def train_and_play_game(
         agent,
         env,
-        random_action_decay,
         max_episodes,
         replay_memory_size,
         batch_size,
@@ -109,18 +109,24 @@ def train_and_play_game(
         max_no_op=30,
         checkpoint_dir=None,
 ):
+    """
+    Parameters
+    ----------
+
+    """
     replay_memory = repmem.ReplayMemory(memory_size=replay_memory_size)
     total_reward_list = []
     with tf.Graph().as_default() as g:
         agent.build_graph()
         episode_count = step_count = action_count = frame_count = 0
+
         with tf.train.MonitoredTrainingSession(
             save_summaries_steps=100,
             checkpoint_dir=checkpoint_dir,
         ) as mon_sess:
+
             # Training loop
             while episode_count < max_episodes:
-                # random_action_prob = max(random_action_decay**episode_count, 0.05)
                 random_action_prob = max(1 - float(frame_count)/final_exploration_frame*0.95, 0.05)
                 # Play a new game
                 previous_observation = env.reset()
@@ -128,15 +134,20 @@ def train_and_play_game(
                 total_reward = 0
                 # Initial action
                 action = np.random.randint(agent.n_actions)
+
                 while not done:
                     # Act at random in first some frames
                     # for _ in range(np.random.randint(1, max_no_op)):
                     #     previous_observation, _, _, _ = env.step(env.action_space.sample())
                     # print(episode_count, step_count, action_count, frame_count)
+
+                    # Update target Q network
                     if frame_count % target_sync_frequency == 0:
                         agent.update_target_q_network(mon_sess)
+
                     # Frame skip
                     if frame_count % action_repeat == 0:
+
                         # Act at random with a fixed probability
                         if np.random.rand() <= random_action_prob:
                             action = np.random.randint(agent.n_actions)
@@ -144,14 +155,17 @@ def train_and_play_game(
                         else:
                             q = agent.act(mon_sess, np.array([previous_observation]))
                             action = q.argmax()
-                            # print(q)
+
                         action_count += 1
+
                     # Receive the results from the game simulator
                     observation, reward, done, info = env.step(action)
                     total_reward += reward
+
                     # Store the experience
                     if frame_count % action_repeat == 0:
                         replay_memory.store(previous_observation, action, reward, observation, done)
+
                     previous_observation = observation
                     # Update q network every update_interval
                     if action_count % update_frequency == 0:
@@ -165,7 +179,7 @@ def train_and_play_game(
                 total_reward_list.append(total_reward)
                 # Show log every log_interval
                 if episode_count % log_frequency == 0:
-                    print("Episode: {} Frame: {} Test: {}".format(episode_count, frame_count, len(total_reward_list)))
+                    # print("Episode: {} Frame: {} Test: {}".format(episode_count, frame_count, len(total_reward_list)))
                     print(
                         "Average Reward: {} Training Loss: {} Epsilon: {}".format(
                             np.mean(total_reward_list[-50:]),

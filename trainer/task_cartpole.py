@@ -22,7 +22,6 @@ def main():
     agents.train_and_play_game(
         agent=agent,
         env=env,
-        random_action_decay=0.99,
         max_episodes=1000,
         replay_memory_size=200000,
         update_frequency=1,
