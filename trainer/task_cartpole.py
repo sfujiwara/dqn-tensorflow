@@ -11,7 +11,7 @@ def q_fn(x, n_actions):
 
 def main():
     tf.logging.set_verbosity(tf.logging.DEBUG)
-    env = gym.make("CartPole-v1")
+    env = gym.make("cartpole-v1")
     print(env.observation_space.shape)
     agent = agents.DQN(
         q_fn=q_fn,

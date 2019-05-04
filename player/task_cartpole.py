@@ -3,26 +3,16 @@
 import argparse
 import tensorflow as tf
 import gym
-from trainer import metaltile
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--export_dir", type=str)
-parser.add_argument("--env", type=str)
-parser.add_argument("--field_size", type=int, default=8)
+parser.add_argument("--export_dir", type=str, default="sample-models/cartpole-v1")
 args, unknown_args = parser.parse_known_args()
 
-ENV_NAME = args.env
 MODEL_DIR = args.export_dir
-FIELD_SIZE = args.field_size
 
-# Create game simulator
-if ENV_NAME == "Chasing-v1":
-    # Use my environment
-    env = metaltile.MetalTileEnv(field_size=8)
-else:
-    # Use OpenAI Gym environment
-    env = gym.make(ENV_NAME)
+
+env = gym.make("CartPole-v0")
 input_shape = env.observation_space.shape
 n_actions = env.action_space.n
 
