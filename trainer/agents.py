@@ -11,7 +11,7 @@ class DQN:
             input_shape,
             n_actions,
             q_fn,
-            learning_rate,
+            optimizer,
             discount_factor=0.99
     ):
         """
@@ -29,10 +29,9 @@ class DQN:
             - input of q_fn: Tensor of shape [None, input_shape[0], input_shape[1], ...] and n_actions
             - output of q_fn: Tensor of shape [None, n_actions]
 
-        learning_rate: the step size of the optimization method
-            - type: float
+        optimizer: the optimizer which used to update q-network
         """
-        self.learning_rate = learning_rate
+        self.optimizer = optimizer
         self.n_actions = n_actions
         self.gamma = discount_factor
         self.input_shape = input_shape
@@ -59,7 +58,7 @@ class DQN:
         # Build update target q-network ops
         q_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="qnet")
         target_q_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="target_qnet")
-        self.train_ops = self._build_optimizer(self.loss, self.learning_rate)
+        self.train_ops = self._build_train_op(self.loss, self.optimizer)
         self.assign_ops = [tf.assign(target_q_vars[i], q_vars[i]) for i in range(len(q_vars))]
 
     @staticmethod
@@ -71,11 +70,9 @@ class DQN:
         return loss
 
     @staticmethod
-    def _build_optimizer(loss, learning_rate):
+    def _build_train_op(loss, optimizer):
         global_step = tf.train.get_or_create_global_step()
-        optim = tf.train.RMSPropOptimizer(learning_rate=learning_rate, momentum=0.95, epsilon=1e-2)
-        # optim = tf.train.RMSPropOptimizer(learning_rate=learning_rate)
-        train_op = optim.minimize(loss, global_step=global_step)
+        train_op = optimizer.minimize(loss, global_step=global_step)
         return train_op
 
     def update(self, sess, x_t, a_t, r_t, x_t_plus_1, terminal):

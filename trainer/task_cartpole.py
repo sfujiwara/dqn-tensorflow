@@ -12,12 +12,12 @@ def q_fn(x, n_actions):
 def main():
     tf.logging.set_verbosity(tf.logging.DEBUG)
     env = gym.make("cartpole-v1")
-    print(env.observation_space.shape)
+    optimizer = tf.train.RMSPropOptimizer(learning_rate=0.00025, momentum=0.95, epsilon=1e-2)
     agent = agents.DQN(
         q_fn=q_fn,
         input_shape=env.observation_space.shape,
         n_actions=env.action_space.n,
-        learning_rate=0.00025
+        optimizer=optimizer,
     )
     agents.train_and_play_game(
         agent=agent,
@@ -29,7 +29,7 @@ def main():
         final_exploration_frame=10000,
         action_repeat=1,
         batch_size=32,
-        checkpoint_dir="outputs/cartpole-v0",
+        # checkpoint_dir="outputs/cartpole-v0",
     )
 
 

@@ -28,11 +28,12 @@ def q_fn(x, n_actions):
 def main():
     tf.logging.set_verbosity(tf.logging.DEBUG)
     env = metaltile.MetalTileEnv(field_size=8)
+    optimizer = tf.train.RMSPropOptimizer(learning_rate=LEARNING_RATE, momentum=0.95, epsilon=1e-2)
     agent = agents.DQN(
         q_fn=q_fn,
         input_shape=env.observation_space.shape,
         n_actions=env.action_space.n,
-        learning_rate=LEARNING_RATE,
+        optimizer=optimizer,
     )
     agents.train_and_play_game(
         agent=agent,
