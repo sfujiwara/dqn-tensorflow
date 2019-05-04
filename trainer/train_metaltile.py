@@ -21,8 +21,14 @@ CHECKPOINT_DIR = args.checkpoint_dir
 
 def q_fn(x, n_actions):
     x = tf.layers.flatten(x)
-    x = tf.layers.dense(x, 128, activation=tf.nn.relu)
-    x = tf.layers.dense(x, 128, activation=tf.nn.relu)
+    x = tf.layers.dense(
+        x, 128, activation=tf.nn.relu,
+        kernel_initializer=tf.random_normal_initializer(stddev=0.01)
+    )
+    x = tf.layers.dense(
+        x, 128, activation=tf.nn.relu,
+        kernel_initializer=tf.random_normal_initializer(stddev=0.01)
+    )
     outputs = tf.layers.dense(x, n_actions, activation=None)
     return outputs
 
@@ -42,12 +48,12 @@ def main():
         agent=agent,
         env=env,
         max_episodes=150000,
-        max_frames=5000000,
+        max_frames=1000000,
         replay_memory_size=REPLAY_MEMORY_SIZE,
         batch_size=32,
         update_frequency=UPDATE_FREQUENCY,
         target_sync_frequency=1000,
-        final_exploration_frame=1500000,
+        final_exploration_frame=500000,
         action_repeat=1,
         max_no_op=0,
         checkpoint_dir=CHECKPOINT_DIR,
