@@ -1,6 +1,5 @@
 import gym
 import tensorflow as tf
-from . import breakout_env
 from . import agents
 
 
@@ -27,6 +26,7 @@ def main():
         replay_memory_size=200000,
         update_frequency=1,
         target_sync_frequency=1000,
+        final_exploration_frame=10000,
         action_repeat=1,
         batch_size=32,
     )

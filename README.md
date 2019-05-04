@@ -1,17 +1,13 @@
 # Deep Q-Networks with TensorFlow
 
+```bash
+pip install -r requirements.txt
+```
+
 ## Training on Local
 
 ```sh
-ENV_NAME="TicTacToe-v1"
-
-python -m trainer.task --output_path outputs/${ENV_NAME} \
-                       --n_episodes 100000 \
-                       --learning_rate 0.000001 \
-                       --n_updates 20 \
-                       --batch_size 50 \
-                       --random_action_decay 0.9999 \
-                       --env_name ${ENV_NAME}
+python -m trainer.task_cartpole
 ```
 
 ## Play Game by Trained Model
