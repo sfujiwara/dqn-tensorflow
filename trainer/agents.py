@@ -104,7 +104,7 @@ def train_and_play_game(
         update_frequency,
         target_sync_frequency,
         final_exploration_frame,
-        log_frequency=5,
+        log_frequency=20,
         action_repeat=4,
         max_no_op=30,
         checkpoint_dir=None,
@@ -177,13 +177,13 @@ def train_and_play_game(
                     frame_count += 1
                 episode_count += 1
                 total_reward_list.append(total_reward)
+
                 # Show log every log_interval
                 if episode_count % log_frequency == 0:
-                    # print("Episode: {} Frame: {} Test: {}".format(episode_count, frame_count, len(total_reward_list)))
-                    print(
-                        "Average Reward: {} Training Loss: {} Epsilon: {}".format(
-                            np.mean(total_reward_list[-50:]),
-                            np.mean(train_loss),
-                            random_action_prob
-                        )
-                    )
+                    tf.logging.info("\t".join([
+                        "Frame: {}".format(frame_count),
+                        "Episode: {}".format(episode_count),
+                        "Average Reward: {:.4f}".format(np.mean(total_reward_list[-50:])),
+                        "Train Loss: {:.4f}".format(np.mean(train_loss)),
+                        "Epsilon: {:.4f}".format(random_action_prob),
+                    ]))
