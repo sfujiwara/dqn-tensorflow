@@ -7,7 +7,8 @@ from gym import Env, spaces
 class MetalTileEnv(Env):
     metadata = {"render.modes": ["human"]}
 
-    def __init__(self, field_size=84):
+    def __init__(self, field_size, time_limit):
+        self.time_limit = time_limit
         self.action_space = spaces.Discrete(5)
         self.observation_space = spaces.Box(-50, 50, [field_size, field_size, 3])
         # self.observation_space = spaces.Box(-50, 50, shape=[field_size**2 * 3])
@@ -53,7 +54,7 @@ class MetalTileEnv(Env):
             self.terminal = True
             reward = 1.
         # Time over
-        elif self.iter >= 5 * self.field_size:
+        elif self.iter >= self.time_limit:
             self.terminal = True
             reward = self.compute_reward()
             # reward = 0.
