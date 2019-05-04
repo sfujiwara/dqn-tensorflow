@@ -28,18 +28,6 @@ pipenv run train-metaltile
 pipenv run train-metaltile-cloud
 ```
 
-## Play Game by Trained Model
-
-```sh
-# Specify export directory for example:
-EXPORT_DIR="sample-models/CartPole-v1/models/episode-4970"
-
-# Specify the name of environment for example:
-ENV_NAME="CartPole-v1"
-
-python -m utils.play_game --env ${ENV_NAME} --export_dir ${EXPORT_DIR}
-```
-
 ### using `curl`
 
 ```
