@@ -124,7 +124,7 @@ def train_and_play_game(
 
             # Training loop
             while episode_count < max_episodes:
-                random_action_prob = max(1 - float(frame_count)/final_exploration_frame*0.95, 0.05)
+                random_action_prob = max(1 - float(frame_count)/final_exploration_frame*0.95, 0.1)
                 # Play a new game
                 previous_observation = env.reset()
                 done = False
