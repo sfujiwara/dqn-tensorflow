@@ -32,28 +32,10 @@ ENV_NAME="CartPole-v1"
 python -m utils.play_game --env ${ENV_NAME} --export_dir ${EXPORT_DIR}
 ```
 
-## Training on Cloud Machine Learning
+## Training on Google Cloud Machine Learning Engine
 
 ```sh
-JOB_NAME="dqn`date '+%Y%m%d%H%M%S'`"
-PROJECT_ID=`gcloud config list project --format "value(core.project)"`
-TRAIN_BUCKET=gs://${PROJECT_ID}-ml
-TRAIN_PATH=${TRAIN_BUCKET}/dqn/${JOB_NAME}
-ENV_NAME="CartPole-v1"
-
-gcloud ml-engine jobs submit training ${JOB_NAME} \
-  --package-path=trainer \
-  --module-name=trainer.task \
-  --staging-bucket="gs://${PROJECT_ID}-ml" \
-  --region=us-central1 \
-  --config=config.yaml \
-  -- \
-  --output_path="${TRAIN_PATH}" \
-  --n_episodes=10000 \
-  --learning_rate=0.001 \
-  --n_updates=50 \
-  --batch_size=50 \
-  --env_name=${ENV_NAME}
+pipenv run train-metaltile-cloud
 ```
 
 ## Monitoring with TensorBoard

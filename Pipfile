@@ -18,3 +18,4 @@ python_version = "3.6"
 [scripts]
 train-cartpole = "python -m  trainer.task_cartpole"
 train-metaltile = "python -m  trainer.task_metaltile"
+train-metaltile-cloud = "bash scripts/metaltile_cloud.sh"
