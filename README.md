@@ -27,24 +27,3 @@ pipenv run train-metaltile
 ```sh
 pipenv run train-metaltile-cloud
 ```
-
-### using `curl`
-
-```
-ACCESS_TOKEN=`gcloud auth print-access-token`
-curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${ACCESS_TOKEN}" https://ml.googleapis.com/v1beta1/projects/cpb100demo1/models/dqn:predict -d @sampledata/sample_curl.json
-```
-
-```json
-{"predictions": [{"q": [0.4523559808731079, 0.38499385118484497, 0.26314204931259155, 0.6228029131889343, 0.5784728527069092], "key": 0}]}
-```
-
-## DQN Server
-
-```
-python dqn_server.py --model ${PATH_TO_SAVED_MODEL}
-```
-
-```
-curl -X POST -H "Content-Type: application/json" localhost:5000 -d @sampledata/sample_curl.json
-```
