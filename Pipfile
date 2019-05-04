@@ -16,7 +16,7 @@ pytest = "*"
 python_version = "3.6"
 
 [scripts]
-train-cartpole = "python -m  trainer.task_cartpole"
-train-metaltile = "python -m  trainer.task_metaltile"
+train-cartpole = "python -m  trainer.train_cartpole"
+train-metaltile = "python -m  trainer.train_metaltile"
 train-metaltile-cloud = "bash scripts/metaltile_cloud.sh"
-play-cartpole = "python -m player.task_cartpole"
+play-cartpole = "python -m player.play_cartpole"
